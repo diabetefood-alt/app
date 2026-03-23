@@ -1196,7 +1196,7 @@
 
       <div class="score-section">
         <div class="score-label">
-          <span>Score diabète T1</span>
+          <span id="score-type-label">Score diabète T1</span>
           <span id="score-text">—</span>
         </div>
         <div class="score-bar">
@@ -1225,7 +1225,7 @@
   <div class="page" id="page-info">
     <div style="background:var(--surface);border-radius:var(--radius);padding:24px;border:2px solid #ffe5cc;margin-bottom:14px;box-shadow:0 6px 24px rgba(255,107,0,0.08);">
       <div style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;margin-bottom:16px;color:var(--text);">🍊 À propos de l'analyse</div>
-      <p style="font-size:0.88rem;color:#5c3010;line-height:1.7;margin-bottom:14px;">DiabeteFood utilise l'IA Gemini de Google pour analyser les informations nutritionnelles et fournir des conseils adaptés au <strong>diabète de type 1 et type 2</strong>.</p>
+      <p style="font-size:0.88rem;color:#5c3010;line-height:1.7;margin-bottom:14px;">DiabeteFood utilise l'IA Claude d'Anthropic pour analyser les informations nutritionnelles et fournir des conseils adaptés au <strong>diabète de type 1 et type 2</strong>.</p>
       <p style="font-size:0.88rem;color:#5c3010;line-height:1.7;margin-bottom:14px;">Pour chaque aliment, l'analyse tient compte de :</p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;gap:10px;align-items:center;font-size:0.85rem;color:#5c3010;font-weight:600;"><span style="background:#dcfce7;padding:5px 12px;border-radius:10px;color:#16a34a;font-family:'Nunito',sans-serif;font-weight:800;">🍞 Glucides</span> Impact sur la glycémie</div>
@@ -1375,7 +1375,7 @@
 <script>
 
 const API_URL = "https://diabetefood-api.diabetefood.workers.dev";
-let history = [];
+let scanHistory = [];
 let scannerActive = false;
 let diabeteType = 1;
 
@@ -1515,17 +1515,17 @@ function updateCompareWinner() {
 function updatePDFPreview() {
   const content = document.getElementById('pdf-stats-content');
   if (!content) return;
-  if (history.length === 0) {
+  if (scanHistory.length === 0) {
     content.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">Scannez des produits pour voir vos statistiques ici.</div>';
     return;
   }
-  const avgScore = Math.round(history.reduce((a,b) => a + b.score, 0) / history.length);
-  const excellent = history.filter(h => h.verdict === 'excellent').length;
-  const aEviter = history.filter(h => h.verdict === 'à éviter').length;
-  const acceptable = history.filter(h => h.verdict === 'acceptable').length;
+  const avgScore = Math.round(scanHistory.reduce((a,b) => a + b.score, 0) / scanHistory.length);
+  const excellent = scanHistory.filter(h => h.verdict === 'excellent').length;
+  const aEviter = scanHistory.filter(h => h.verdict === 'à éviter').length;
+  const acceptable = scanHistory.filter(h => h.verdict === 'acceptable').length;
   const scoreColor = avgScore >= 70 ? 'var(--good)' : avgScore >= 40 ? 'var(--warn)' : 'var(--danger)';
   content.innerHTML = `
-    <div class="pdf-stat-row"><span class="pdf-stat-label">Produits analysés</span><span class="pdf-stat-value">${history.length}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">Produits analysés</span><span class="pdf-stat-value">${scanHistory.length}</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">Score moyen</span><span class="pdf-stat-value" style="color:${scoreColor}">${avgScore}/100</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">✅ Excellents</span><span class="pdf-stat-value" style="color:var(--good)">${excellent}</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">⚠️ Acceptables</span><span class="pdf-stat-value" style="color:var(--warn)">${acceptable}</span></div>
@@ -1534,10 +1534,10 @@ function updatePDFPreview() {
 }
 
 function generatePDF() {
-  if (history.length === 0) { showError("Scannez d'abord quelques produits !"); return; }
+  if (scanHistory.length === 0) { showError("Scannez d'abord quelques produits !"); return; }
   const date = new Date().toLocaleDateString('fr-FR');
-  const avgScore = Math.round(history.reduce((a,b) => a + b.score, 0) / history.length);
-  const rows = history.map(h => `
+  const avgScore = Math.round(scanHistory.reduce((a,b) => a + b.score, 0) / scanHistory.length);
+  const rows = scanHistory.map(h => `
     <tr>
       <td>${h.nom}</td>
       <td style="text-align:center;font-weight:700;color:${h.verdict==='excellent'?'#16a34a':h.verdict==='acceptable'?'#d97706':'#dc2626'}">${h.score}/100</td>
@@ -1565,10 +1565,10 @@ function generatePDF() {
     <p>Patient : Diabète Type ${diabeteType} &nbsp;|&nbsp; Généré le : ${date}</p>
   </div>
   <div class="stats">
-    <div class="stat-box"><div class="stat-num">${history.length}</div><div class="stat-lbl">Produits analysés</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.length}</div><div class="stat-lbl">Produits analysés</div></div>
     <div class="stat-box"><div class="stat-num">${avgScore}/100</div><div class="stat-lbl">Score moyen</div></div>
-    <div class="stat-box"><div class="stat-num">${history.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">✅ Excellents</div></div>
-    <div class="stat-box"><div class="stat-num">${history.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">🚫 À éviter</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">✅ Excellents</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">🚫 À éviter</div></div>
   </div>
   <h2>Détail des produits scannés</h2>
   <table><thead><tr><th>Produit</th><th>Score</th><th>Glucides</th><th>Sucres</th><th>Heure</th></tr></thead>
@@ -1712,8 +1712,8 @@ async function analyzeBarcode(barcode) {
     }
 
     showResult(result);
-    history.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:productImageUrl});
-    if (history.length > 20) history.pop();
+    scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:productImageUrl});
+    if (scanHistory.length > 20) scanHistory.pop();
 
   } catch(e) {
     document.getElementById('loading-card').style.display = 'none';
@@ -1747,11 +1747,21 @@ function showResult(r) {
   const badge = document.getElementById('verdict-badge');
   badge.className = `verdict-badge ${colorKey}`;
   badge.textContent = labelMap[r.verdict] || r.verdict;
+  document.getElementById('score-type-label').textContent = `Score diabète T${diabeteType}`;
   document.getElementById('score-text').textContent = `${score}/100`;
   const fill = document.getElementById('score-fill');
+  fill.style.transition = 'none';
+  fill.style.width = '0%';
+  fill.offsetHeight; // force reflow
+  fill.style.transition = 'width 1s cubic-bezier(.17,.67,.3,1.3)';
   fill.style.background = fillColor;
-  setTimeout(() => { fill.style.width = `${score}%`; }, 100);
-  setTimeout(() => { document.getElementById('gi-marker').style.left = `${gi}%`; }, 200);
+  const giMarker = document.getElementById('gi-marker');
+  giMarker.style.transition = 'none';
+  giMarker.style.left = '0%';
+  giMarker.offsetHeight; // force reflow
+  giMarker.style.transition = 'left 1s ease';
+  setTimeout(() => { fill.style.width = `${score}%`; }, 50);
+  setTimeout(() => { giMarker.style.left = `${gi}%`; }, 100);
 
   const nutrients = [
     {icon:'🍞',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
@@ -1775,19 +1785,28 @@ function showResult(r) {
 // ─── HISTORY ─────────────────────────────────────────────────────────────────
 function renderHistory() {
   const list = document.getElementById('history-list');
-  if (history.length === 0) { list.innerHTML = '<div class="empty-history">Aucun aliment scanné pour l\'instant</div>'; return; }
+  if (scanHistory.length === 0) { list.innerHTML = '<div class="empty-history">Aucun aliment scanné pour l\'instant</div>'; return; }
   const colorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
-  list.innerHTML = history.map(h => {
+  list.innerHTML = scanHistory.map((h, index) => {
     const thumb = h.imageUrl
-      ? `<img class="history-thumb" src="${h.imageUrl}" alt="${h.nom}" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>🛒</div>'">`
+      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>🛒</div>'">`
       : `<div class="history-thumb-placeholder">🛒</div>`;
-    return `<div class="history-item" onclick="showResult(${JSON.stringify(h).replace(/'/g,'&#39;').replace(/"/g,'&quot;')})">
+    const escapedName = (h.nom || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<div class="history-item" onclick="showHistoryItem(${index})">
       ${thumb}
-      <span class="history-name">${h.nom}</span>
+      <span class="history-name">${escapedName}</span>
       <span class="history-score" style="color:${colorMap[h.verdict]||'#f59e0b'}">${h.score}/100</span>
       <span class="history-time">${h.time}</span>
     </div>`;
   }).join('');
+}
+
+// ─── HISTORY ITEM CLICK ──────────────────────────────────────────────────────
+function showHistoryItem(index) {
+  const item = scanHistory[index];
+  if (!item) return;
+  switchPage('scan');
+  showResult(item);
 }
 
 // ─── ERROR ────────────────────────────────────────────────────────────────────
