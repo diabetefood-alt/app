@@ -16,25 +16,25 @@
   ],
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=192&bold=true&format=png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=512&bold=true&format=png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-maskable-192.png",
+      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=192&bold=true&format=png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/icon-maskable-512.png",
+      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=512&bold=true&format=png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
