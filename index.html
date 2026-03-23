@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DiabeteFood — Scanner Alimentaire</title>
+<meta name="theme-color" content="#ff6b00">
+<meta name="description" content="Scannez les codes-barres alimentaires et obtenez une analyse adaptée au diabète de type 1 et type 2.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1825,6 +1833,11 @@ document.getElementById('barcode-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') analyzeBarcode(e.target.value);
 });
 renderScanCounter();
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>
