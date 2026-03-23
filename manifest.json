@@ -1,7 +1,7 @@
 {
-  "name": "DiabeteFood — Scanner Alimentaire",
+  "name": "DiabeteFood \u2014 Scanner Alimentaire",
   "short_name": "DiabeteFood",
-  "description": "Scannez les codes-barres alimentaires et obtenez une analyse adaptée au diabète de type 1 et type 2.",
+  "description": "Scannez les codes-barres alimentaires et obtenez une analyse adapt\u00e9e au diab\u00e8te de type 1 et type 2.",
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
@@ -9,35 +9,40 @@
   "background_color": "#fff8f2",
   "theme_color": "#ff6b00",
   "lang": "fr",
-  "categories": [
-    "health",
-    "food",
-    "medical"
-  ],
+  "categories": ["health", "food", "medical"],
   "icons": [
     {
-      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=192&bold=true&format=png",
+      "src": "https://placehold.co/192x192/ff6b00/fff8f2.png?text=DF&font=roboto",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=512&bold=true&format=png",
+      "src": "https://placehold.co/512x512/ff6b00/fff8f2.png?text=DF&font=roboto",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=192&bold=true&format=png",
+      "src": "https://placehold.co/192x192/ff6b00/fff8f2.png?text=DF&font=roboto",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://ui-avatars.com/api/?name=DF&background=ff6b00&color=fff8f2&size=512&bold=true&format=png",
+      "src": "https://placehold.co/512x512/ff6b00/fff8f2.png?text=DF&font=roboto",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Scanner de code-barres"
     }
   ]
 }
