@@ -87,7 +87,7 @@
     position: relative;
   }
   .logo span::after {
-    content: '🍊';
+    content: '';
     font-size: 1rem;
     margin-left: 4px;
     vertical-align: middle;
@@ -754,12 +754,30 @@
   /* EMPTY STATE */
   .empty-history {
     text-align: center;
-    padding: 40px 24px;
-    color: var(--muted);
-    font-size: 0.88rem;
-    background: var(--surface);
-    border-radius: 16px;
-    border: 2px dashed #ffe5cc;
+    padding: 48px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .empty-history-icon {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #fff3e8, #ffe5cc);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .empty-history-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #333;
+  }
+  .empty-history-sub {
+    color: #999;
+    font-size: 0.85rem;
+    margin: 0;
+    max-width: 260px;
   }
   .empty-history-icon {
     width: 80px;
@@ -1393,7 +1411,7 @@
       </div>
 
       <div class="advice-section">
-        <div class="advice-title" id="advice-title">🩺 Conseils Diabète T1</div>
+        <div class="advice-title" id="advice-title">⚕ Conseils Diabète T1</div>
         <div id="advice-list"></div>
       </div>
     </div>
@@ -1469,7 +1487,7 @@
     <!-- COMPARATEUR -->
     <div class="compare-section">
       <div class="compare-header">
-        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;">⚖️</div>
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;">●</div>
         <h3>Comparateur de produits</h3>
         <button class="btn-reset-compare" onclick="resetCompare()">Réinitialiser</button>
       </div>
@@ -1545,14 +1563,14 @@
 <!-- PREMIUM POPUP -->
 <div class="premium-overlay hidden" id="premium-overlay">
   <div class="premium-sheet">
-    <span class="premium-crown">👑</span>
+    <span class="premium-crown">★</span>
     <div class="premium-title">Passez à <span>Premium</span></div>
     <div class="premium-sub">Vous avez utilisé vos 5 scans gratuits aujourd'hui.<br>Débloquez les scans illimités et plus encore !</div>
     <div class="premium-features">
       <div class="premium-feature"><div class="premium-feature-icon">♾️</div>Scans illimités chaque jour</div>
-      <div class="premium-feature"><div class="premium-feature-icon">⚖️</div>Comparateur de produits</div>
-      <div class="premium-feature"><div class="premium-feature-icon">🚨</div>Alertes glucides personnalisées</div>
-      <div class="premium-feature"><div class="premium-feature-icon">📄</div>Rapport PDF pour votre médecin</div>
+      <div class="premium-feature"><div class="premium-feature-icon">●</div>Comparateur de produits</div>
+      <div class="premium-feature"><div class="premium-feature-icon">⚠</div>Alertes glucides personnalisées</div>
+      <div class="premium-feature"><div class="premium-feature-icon">☰</div>Rapport PDF pour votre médecin</div>
     </div>
     <div class="premium-prices">
       <div class="price-option" id="price-monthly" onclick="selectPrice('monthly')">
@@ -1566,7 +1584,7 @@
         <div><span class="price-option-save">Économise 16€</span></div>
       </div>
     </div>
-    <button class="btn-premium" onclick="activatePremium()">🚀 Démarrer l'essai gratuit 7 jours</button>
+    <button class="btn-premium" onclick="activatePremium()">→ Démarrer l'essai gratuit 7 jours</button>
     <button class="btn-close-premium" onclick="closePremiumPopup()">Non merci, continuer demain</button>
   </div>
 </div>
@@ -1581,7 +1599,7 @@ let scannerActive = false;
 let diabeteType = 1;
 
 // ─── FREEMIUM CONFIG ─────────────────────────────────────────────────────────
-// 🔧 SWITCH: Mets FREEMIUM_ENABLED = true pour activer la limite quand tu es prêt
+// ⚙ SWITCH: Mets FREEMIUM_ENABLED = true pour activer la limite quand tu es prêt
 const FREEMIUM_ENABLED = false;
 const FREE_SCANS_PER_DAY = 5;
 
@@ -1596,7 +1614,7 @@ function renderScanCounter() {
   if (!FREEMIUM_ENABLED || isPremium()) {
     if (isPremium()) {
       counter.className = 'scan-counter premium-mode';
-      counter.innerHTML = `<span style="font-size:1.1rem;">👑</span><span class="scan-counter-text"><strong>Premium actif</strong> — Scans illimités</span>`;
+      counter.innerHTML = `<span style="font-size:1.1rem;">★</span><span class="scan-counter-text"><strong>Premium actif</strong> — Scans illimités</span>`;
     } else {
       counter.style.display = 'none';
     }
@@ -1611,7 +1629,7 @@ function renderScanCounter() {
   counter.innerHTML = `
     <div class="scan-counter-dots">${dots}</div>
     <span class="scan-counter-text"><strong>${remaining}</strong> scan${remaining !== 1 ? 's' : ''} restant${remaining !== 1 ? 's' : ''} aujourd'hui</span>
-    <button class="btn-upgrade-small" onclick="showPremiumPopup()">👑 Premium</button>
+    <button class="btn-upgrade-small" onclick="showPremiumPopup()">★ Premium</button>
   `;
 }
 
@@ -1672,7 +1690,7 @@ let comparePending = null;
 function addToCompare(slot) {
   comparePending = slot;
   switchPage('scan');
-  showError('📦 Scannez le produit ' + (slot === 1 ? 'A' : 'B') + ' pour le comparer');
+  showError('Scannez le produit ' + (slot === 1 ? 'A' : 'B') + ' pour le comparer');
 }
 function resetCompare() {
   compareSlots = { 1: null, 2: null };
@@ -1693,9 +1711,9 @@ function renderCompareSlot(slot) {
     <div class="compare-product-name">${d.nom}</div>
     <div class="compare-product-score ${c}">${d.score}</div>
     <div class="compare-verdict-badge ${c}">${d.verdict}</div>
-    <div class="compare-mini-stat">🍞 ${d.nutriments?.glucides || 'N/A'}</div>
-    <div class="compare-mini-stat">🍬 ${d.nutriments?.sucres || 'N/A'}</div>
-    <div class="compare-mini-stat">🌾 ${d.nutriments?.fibres || 'N/A'}</div>
+    <div class="compare-mini-stat">● ${d.nutriments?.glucides || 'N/A'}</div>
+    <div class="compare-mini-stat">● ${d.nutriments?.sucres || 'N/A'}</div>
+    <div class="compare-mini-stat">● ${d.nutriments?.fibres || 'N/A'}</div>
     <button class="btn-reset-compare" style="margin-top:6px;" onclick="compareSlots[${slot}]=null;renderCompareSlot(${slot});document.getElementById('compare-winner').style.display='none';">✕ Retirer</button>
   `;
 }
@@ -1704,11 +1722,11 @@ function updateCompareWinner() {
   if (!compareSlots[1] || !compareSlots[2]) { w.style.display = 'none'; return; }
   w.style.display = 'flex';
   if (compareSlots[1].score > compareSlots[2].score) {
-    w.innerHTML = `🏆 <strong>${compareSlots[1].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[1].score - compareSlots[2].score} pts)`;
+    w.innerHTML = `★ <strong>${compareSlots[1].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[1].score - compareSlots[2].score} pts)`;
   } else if (compareSlots[2].score > compareSlots[1].score) {
-    w.innerHTML = `🏆 <strong>${compareSlots[2].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[2].score - compareSlots[1].score} pts)`;
+    w.innerHTML = `★ <strong>${compareSlots[2].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[2].score - compareSlots[1].score} pts)`;
   } else {
-    w.innerHTML = `🤝 Les deux produits ont le même score !`;
+    w.innerHTML = `↔ Les deux produits ont le même score !`;
   }
 }
 
@@ -1730,7 +1748,7 @@ function updatePDFPreview() {
     <div class="pdf-stat-row"><span class="pdf-stat-label">Score moyen</span><span class="pdf-stat-value" style="color:${scoreColor}">${avgScore}/100</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">✅ Excellents</span><span class="pdf-stat-value" style="color:var(--good)">${excellent}</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">⚠️ Acceptables</span><span class="pdf-stat-value" style="color:var(--warn)">${acceptable}</span></div>
-    <div class="pdf-stat-row"><span class="pdf-stat-label">🚫 À éviter</span><span class="pdf-stat-value" style="color:var(--danger)">${aEviter}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">✖ À éviter</span><span class="pdf-stat-value" style="color:var(--danger)">${aEviter}</span></div>
   `;
 }
 
@@ -1762,14 +1780,14 @@ function generatePDF() {
     .disclaimer{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:20px;font-size:0.78rem;color:#92400e;}
   </style></head><body>
   <div class="header">
-    <h1>🍊 DiabeteFood — Rapport nutritionnel</h1>
+    <h1> DiabeteFood — Rapport nutritionnel</h1>
     <p>Patient : Diabète Type ${diabeteType} &nbsp;|&nbsp; Généré le : ${date}</p>
   </div>
   <div class="stats">
     <div class="stat-box"><div class="stat-num">${scanHistory.length}</div><div class="stat-lbl">Produits analysés</div></div>
     <div class="stat-box"><div class="stat-num">${avgScore}/100</div><div class="stat-lbl">Score moyen</div></div>
     <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">✅ Excellents</div></div>
-    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">🚫 À éviter</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">✖ À éviter</div></div>
   </div>
   <h2>Détail des produits scannés</h2>
   <table><thead><tr><th>Produit</th><th>Score</th><th>Glucides</th><th>Sucres</th><th>Heure</th></tr></thead>
@@ -1938,7 +1956,7 @@ function showResult(r) {
   const score = Math.min(100, Math.max(0, r.score));
   const gi = Math.min(100, Math.max(0, r.index_glycemique || 50));
   const colorMap = {'excellent':'green','acceptable':'orange','à éviter':'red'};
-  const emojiMap = {'excellent':'✅','acceptable':'⚠️','à éviter':'🚫'};
+  const emojiMap = {'excellent':'✅','acceptable':'⚠️','à éviter':'✖'};
   const labelMap = {'excellent':'Excellent','acceptable':'À consommer avec modération','à éviter':'À éviter'};
   const fillColorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
   const colorKey = colorMap[r.verdict] || 'orange';
@@ -1946,9 +1964,9 @@ function showResult(r) {
 
   const imgContainer = document.getElementById('product-img-container');
   if (r.imageUrl) {
-    imgContainer.innerHTML = `<img class="product-img-banner" src="${r.imageUrl}" alt="${r.nom}" onerror="this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'>🛒</div>'">`;
+    imgContainer.innerHTML = `<img class="product-img-banner" src="${r.imageUrl}" alt="${r.nom}" onerror="this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'>■</div>'">`;
   } else {
-    imgContainer.innerHTML = `<div class="product-img-placeholder">🛒</div>`;
+    imgContainer.innerHTML = `<div class="product-img-placeholder">■</div>`;
   }
 
   document.getElementById('result-name').textContent = r.nom || 'Aliment analysé';
@@ -1975,16 +1993,16 @@ function showResult(r) {
   setTimeout(() => { giMarker.style.left = `${gi}%`; }, 100);
 
   const nutrients = [
-    {icon:'🍞',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
-    {icon:'🍬',label:'Sucres',value:r.nutriments?.sucres||'N/A'},
-    {icon:'🌾',label:'Fibres',value:r.nutriments?.fibres||'N/A'},
-    {icon:'🔥',label:'Calories',value:r.nutriments?.calories||'N/A'}
+    {icon:'●',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
+    {icon:'●',label:'Sucres',value:r.nutriments?.sucres||'N/A'},
+    {icon:'●',label:'Fibres',value:r.nutriments?.fibres||'N/A'},
+    {icon:'▲',label:'Calories',value:r.nutriments?.calories||'N/A'}
   ];
   document.getElementById('nutrients-grid').innerHTML = nutrients.map(n =>
     `<div class="nutrient-pill"><div class="nutrient-icon">${n.icon}</div><div class="nutrient-info"><div class="nutrient-value">${n.value}</div><div class="nutrient-name">${n.label}/100g</div></div></div>`
   ).join('');
 
-  document.getElementById('advice-title').textContent = `🩺 Conseils Diabète T${diabeteType}`;
+  document.getElementById('advice-title').textContent = `⚕ Conseils Diabète T${diabeteType}`;
   document.getElementById('advice-list').innerHTML = (r.conseils||[]).map(a =>
     `<div class="advice-item"><div class="advice-dot"></div><span>${a}</span></div>`
   ).join('');
@@ -1996,12 +2014,12 @@ function showResult(r) {
 // ─── HISTORY ─────────────────────────────────────────────────────────────────
 function renderHistory() {
   const list = document.getElementById('history-list');
-  if (scanHistory.length === 0) { list.innerHTML = '<div class="empty-history">Aucun aliment scanné pour l\'instant</div>'; return; }
+  if (scanHistory.length === 0) { list.innerHTML = '<div class="empty-history"><div class="empty-history-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-history-title">Aucun scan pour l\'instant</div><p class="empty-history-sub">Scannez votre premier produit pour commencer.</p><button class="scan-btn" onclick="switchPage(\'scan\')">Scanner un produit</button></div>'; return; }
   const colorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
   list.innerHTML = scanHistory.map((h, index) => {
     const thumb = h.imageUrl
-      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>🛒</div>'">`
-      : `<div class="history-thumb-placeholder">🛒</div>`;
+      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>■</div>'">`
+      : `<div class="history-thumb-placeholder">■</div>`;
     const escapedName = (h.nom || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<div class="history-item" onclick="showHistoryItem(${index})">
       ${thumb}
@@ -2023,7 +2041,7 @@ function showHistoryItem(index) {
 // ─── ERROR ────────────────────────────────────────────────────────────────────
 function showError(msg) {
   const el = document.getElementById('error-toast');
-  el.textContent = msg.startsWith('✅') || msg.startsWith('👑') ? msg : '⚠️ ' + msg;
+  el.textContent = msg.startsWith('✅') || msg.startsWith('★') ? msg : '⚠️ ' + msg;
   el.style.display = 'block';
   el.style.background = msg.startsWith('✅') ? '#dcfce7' : '#fee2e2';
   el.style.borderColor = msg.startsWith('✅') ? '#86efac' : '#fca5a5';
