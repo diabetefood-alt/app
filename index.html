@@ -1055,7 +1055,7 @@
   }
 
   /* ── SCAN COUNTER ── */
-  .scan-counter {
+  .scan-counter { display:none!important;
     display: flex; align-items: center; gap: 6px;
     background: var(--surface); border: 2px solid #ffe5cc;
     border-radius: 14px; padding: 10px 14px;
@@ -1552,7 +1552,7 @@ const FREE_SCANS_PER_DAY = 5;
 function getTodayKey() { return 'scans_' + new Date().toISOString().slice(0,10); }
 function getScansToday() { return parseInt(localStorage.getItem(getTodayKey()) || '0'); }
 function incrementScans() { localStorage.setItem(getTodayKey(), getScansToday() + 1); }
-function isPremium() { return true; return localStorage.getItem('diabetefood_premium') === 'true'; }
+function isPremium() { return false; return localStorage.getItem('diabetefood_premium') === 'true'; }
 
 function renderScanCounter() {
   const counter = document.getElementById('scan-counter');
