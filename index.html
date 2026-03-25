@@ -1540,7 +1540,7 @@
 <script>
 
 const API_URL = "https://diabetefood-api.diabetefood.workers.dev";
-let scanHistory = [];
+let scanHistory = JSON.parse(localStorage.getItem('diabetefood_history') || '[]');
 let scannerActive = false;
 let diabeteType = 1;
 
@@ -1888,6 +1888,7 @@ async function analyzeBarcode(barcode) {
 
     showResult(result);
     scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:productImageUrl});
+        localStorage.setItem('diabetefood_history', JSON.stringify(scanHistory));
     if (scanHistory.length > 20) scanHistory.pop();
 
   } catch(e) {
