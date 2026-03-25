@@ -194,6 +194,25 @@
     display: none;
     overflow: hidden;
     z-index: 9999;
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  #scanner-container.scanner-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Hide header & nav when scanner is active */
+  body.scanner-active header,
+  body.scanner-active nav {
+    display: none !important;
+  }
+  body.scanner-active main {
+    z-index: 10000;
+  }
+  body.scanner-active #scanner-container {
+    z-index: 10001;
   }
 
   #scanner-container video,
@@ -1663,6 +1682,9 @@ function startScanner() {
   container.style.display = 'block';
   idle.style.display = 'none';
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('scanner-active');
+  // Smooth fade-in animation
+  requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); });
   Quagga.init({
     inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}} },
     decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] },
@@ -1686,9 +1708,14 @@ function startScanner() {
 function stopScanner() {
   if (!scannerActive) return;
   Quagga.stop(); scannerActive = false;
-  document.getElementById('scanner-container').style.display = 'none';
-  document.getElementById('scanner-idle').style.display = 'block';
+  const sc = document.getElementById('scanner-container');
+  sc.classList.remove('scanner-visible');
+  setTimeout(() => {
+    sc.style.display = 'none';
+    document.getElementById('scanner-idle').style.display = 'block';
+  }, 300);
   document.body.style.overflow = '';
+  document.body.classList.remove('scanner-active');
 }
 
 // ─── OPEN FOOD FACTS ──────────────────────────────────────────────────────────
