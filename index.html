@@ -145,12 +145,27 @@
       updatePremSummary();
     }
 
+    async function compressImage(file, maxSz) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxSz || h > maxSz) {
+            if (w > h) { h = Math.round(h * maxSz / w); w = maxSz; }
+            else { w = Math.round(w * maxSz / h); h = maxSz; }
+          }
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
     async function premHandlePhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const base64 = e.target.result;
+      const base64 = await compressImage(file, 1024);
         // Show photo in chat
         premMessages.push({role:'user', content:'<div class="prem-photo-preview"><img src="' + base64 + '" style="max-height:200px;object-fit:cover;"></div>'});
         renderPremChat();
@@ -171,7 +186,7 @@
               model:'claude-haiku-4-5-20251001',
               max_tokens:1024,
               system:'Tu es Dr. DiabeteFood. Analyse cette photo de repas pour un diab\u00e9tique T' + diabType + '. Identifie chaque aliment, estime les portions et calcule les macros. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}',
-              messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:base64.split(',')[1]}},{type:'text',text:'Analyse ce repas pour un diab\u00e9tique'}]}]
+              messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64.split(',')[1]}},{type:'text',text:'Analyse ce repas pour un diab\u00e9tique'}]}]
             })
           });
           const data = await response.json();
@@ -203,8 +218,7 @@
         renderPremChat();
         updatePremSummary();
       };
-      reader.readAsDataURL(file);
-    }
+      
 
     function generatePremiumReport() {
       if (premDayTotals.meals.length === 0) { alert('Aucun repas enregistr\u00e9 aujourd\'hui'); return; }
