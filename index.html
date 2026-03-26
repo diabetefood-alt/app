@@ -1297,6 +1297,17 @@
 .not-found-tip-title { font-weight:700; color:#e67e22; font-size:0.85rem; margin-bottom:6px; }
 .not-found-tip-text { color:#666; font-size:0.8rem; line-height:1.4; }
 
+
+.manual-entry-btn { background:none; border:2px solid #e67e22; color:#e67e22; padding:10px 24px; border-radius:12px; font-weight:700; font-size:0.9rem; cursor:pointer; margin-top:8px; max-width:300px; width:100%; }
+.manual-entry-btn:hover { background:#fff3e8; }
+.manual-form { display:none; width:100%; max-width:320px; margin-top:12px; }
+.manual-form.active { display:flex; flex-direction:column; gap:10px; }
+.manual-form input { padding:10px 14px; border:1.5px solid #ddd; border-radius:10px; font-size:0.9rem; font-family:'Nunito',sans-serif; outline:none; }
+.manual-form input:focus { border-color:#e67e22; }
+.manual-form-label { font-size:0.75rem; color:#999; margin-bottom:-6px; font-weight:600; }
+.manual-form-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.manual-form-note { font-size:0.7rem; color:#bbb; text-align:center; }
+
 </style>
 </head>
 <body>
@@ -1847,10 +1858,25 @@ async function analyzeBarcode(barcode) {
     document.getElementById('result-card').innerHTML = '<div class="not-found-container">' +
       '<div class="not-found-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6" stroke-linecap="round"/></svg></div>' +
       '<h3 class="not-found-title">Produit non trouv\u00e9</h3>' +
-      '<p class="not-found-sub">Ce produit n\u2019est pas encore dans notre base de donn\u00e9es.</p>' +
+      '<p class="not-found-sub">Ce produit n\u2019est pas encore dans notre base de donn\u00e9es. Entrez les infos de l\u2019\u00e9tiquette pour l\u2019analyser.</p>' +
       '<div class="not-found-barcode">' + barcode + '</div>' +
-      '<div class="not-found-tip"><div class="not-found-tip-title">\u2139\ufe0f Astuce</div><div class="not-found-tip-text">V\u00e9rifiez l\u2019\u00e9tiquette du produit. Regardez les glucides et les sucres pour 100g pour \u00e9valuer son impact sur votre glyc\u00e9mie.</div></div>' +
-      '<button class="scan-btn" onclick="switchPage(\u0027scanner\u0027)" style="margin-top:16px;max-width:300px;">Scanner un autre produit</button>' +
+      '<button class="manual-entry-btn" onclick="document.getElementById(\u0027manual-form\u0027).classList.toggle(\u0027active\u0027)">Entrer les infos manuellement</button>' +
+      '<div id="manual-form" class="manual-form">' +
+      '<span class="manual-form-label">Nom du produit</span>' +
+      '<input type="text" id="manual-name" placeholder="Ex: Biscuits Lotus">' +
+      '<span class="manual-form-label">Valeurs nutritionnelles pour 100g</span>' +
+      '<div class="manual-form-row">' +
+      '<input type="number" id="manual-glucides" placeholder="Glucides (g)" step="0.1">' +
+      '<input type="number" id="manual-sucres" placeholder="Sucres (g)" step="0.1">' +
+      '</div>' +
+      '<div class="manual-form-row">' +
+      '<input type="number" id="manual-fibres" placeholder="Fibres (g)" step="0.1">' +
+      '<input type="number" id="manual-calories" placeholder="Calories (kcal)" step="1">' +
+      '</div>' +
+      '<button class="scan-btn" onclick="analyzeManual(\u0027' + barcode + '\u0027)" style="max-width:300px;">Analyser ce produit</button>' +
+      '<p class="manual-form-note">Recopiez les valeurs depuis l\u2019\u00e9tiquette du produit</p>' +
+      '</div>' +
+      '<button class="scan-btn" onclick="switchPage(\u0027scanner\u0027)" style="margin-top:8px;max-width:300px;background:#eee;color:#666;">Scanner un autre produit</button>' +
       '</div>';
     return;
   }
@@ -2035,6 +2061,61 @@ renderScanCounter();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+    async function analyzeManual(barcode) {
+      const name = document.getElementById('manual-name').value.trim() || 'Produit inconnu';
+      const glucides = document.getElementById('manual-glucides').value;
+      const sucres = document.getElementById('manual-sucres').value;
+      const fibres = document.getElementById('manual-fibres').value;
+      const calories = document.getElementById('manual-calories').value;
+
+      if (!glucides && !sucres && !calories) {
+        showError('Veuillez remplir au moins les glucides ou les calories.');
+        return;
+      }
+
+      document.getElementById('result-card').style.display = 'none';
+      document.getElementById('loading-card').style.display = 'block';
+
+      const nutrientsData = { glucides: glucides||null, sucres: sucres||null, fibres: fibres||null, calories: calories||null };
+      const nutritionText = 'Produit: ' + name + '\nValeurs pour 100g:\n- glucides: ' + (glucides||'N/A') + 'g\n- sucres: ' + (sucres||'N/A') + 'g\n- fibres: ' + (fibres||'N/A') + 'g\n- calories: ' + (calories||'N/A') + ' kcal';
+
+      const typeLabel = diabeteType === 1 ? 'TYPE 1 (insulino-d\u00e9pendant)' : 'TYPE 2 (non insulino-d\u00e9pendant)';
+      const typeAdviceContext = diabeteType === 1 ? 'Pour le T1: focus sur le comptage des glucides pour le calcul d\'insuline, index glyc\u00e9mique, risque d\'hypoglyc\u00e9mie/hyperglyc\u00e9mie rapide.' : 'Pour le T2: focus sur la r\u00e9sistance \u00e0 l\'insuline, perte de poids, charge glyc\u00e9mique totale, fibres, \u00e9viter les sucres rapides, portions.';
+
+      const prompt = 'Tu es un expert en nutrition pour les personnes atteintes de DIAB\u00c8TE DE ' + typeLabel + '.\n' + typeAdviceContext + '\n\nVoici les informations nutritionnelles d\'un aliment (pour 100g):\n' + nutritionText + '\n\nAnalyse cet aliment et r\u00e9ponds UNIQUEMENT en JSON valide avec ce format exact:\n{\n  "nom": "' + name + '",\n  "score": <0-100>,\n  "verdict": "excellent" | "acceptable" | "\u00e0 \u00e9viter",\n  "index_glycemique": <0-100>,\n  "nutriments": { "glucides": "<valeur>g" ou "N/A", "sucres": "<valeur>g" ou "N/A", "fibres": "<valeur>g" ou "N/A", "calories": "<valeur> kcal" ou "N/A" },\n  "conseils": ["<conseil 1>","<conseil 2>","<conseil 3>"]\n}';
+
+      try {
+        const response = await fetch(API_URL, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:800, system:'Tu es un assistant m\u00e9dical sp\u00e9cialis\u00e9 en diab\u00e8te de type ' + diabeteType + '. R\u00e9ponds uniquement en JSON valide, sans markdown ni backticks.', messages:[{role:'user',content:prompt}] })
+        });
+        const data = await response.json();
+        const text = data.content?.[0]?.text || '';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('No JSON');
+        const result = JSON.parse(jsonMatch[0]);
+
+        if (nutrientsData.glucides) result.nutriments.glucides = nutrientsData.glucides + 'g';
+        if (nutrientsData.sucres) result.nutriments.sucres = nutrientsData.sucres + 'g';
+        if (nutrientsData.fibres) result.nutriments.fibres = nutrientsData.fibres + 'g';
+        if (nutrientsData.calories) result.nutriments.calories = nutrientsData.calories + ' kcal';
+
+        document.getElementById('loading-card').style.display = 'none';
+        result.imageUrl = null;
+        checkGlucideAlert(nutrientsData.glucides);
+        showResult(result);
+        scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:null});
+        localStorage.setItem('diabetefood_history', JSON.stringify(scanHistory));
+        if (scanHistory.length > 20) scanHistory.pop();
+      } catch(e) {
+        document.getElementById('loading-card').style.display = 'none';
+        showError("Erreur d'analyse. V\u00e9rifiez votre connexion.");
+        console.error(e);
+      }
+    }
+
 </script>
 </body>
 </html>
