@@ -12,7 +12,238 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js">
+
+    // ===== PREMIUM CHAT =====
+    let premMessages = JSON.parse(localStorage.getItem('prem_messages_' + new Date().toDateString()) || '[]');
+    let premDayTotals = JSON.parse(localStorage.getItem('prem_totals_' + new Date().toDateString()) || '{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_sum":0,"ig_count":0,"meals":[]}');
+
+    function initPremiumCalendar() {
+      const cal = document.getElementById('prem-calendar');
+      if (!cal) return;
+      const today = new Date();
+      const dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+      let html = '';
+      for (let i = -3; i <= 3; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + i);
+        const isActive = i === 0 ? ' active' : '';
+        html += '<div class="prem-day' + isActive + '"><div class="prem-day-name">' + dayNames[d.getDay()] + '</div><div class="prem-day-num">' + d.getDate() + '</div></div>';
+      }
+      cal.innerHTML = html;
+      updatePremSummary();
+      renderPremChat();
+    }
+
+    function updatePremSummary() {
+      const t = premDayTotals;
+      const ce = document.getElementById('prem-carbs');
+      const ca = document.getElementById('prem-cal');
+      const ig = document.getElementById('prem-ig');
+      if (ce) ce.textContent = Math.round(t.glucides) + 'g';
+      if (ca) ca.textContent = Math.round(t.calories);
+      if (ig) ig.textContent = t.ig_count > 0 ? Math.round(t.ig_sum / t.ig_count) : '--';
+    }
+
+    function renderPremChat() {
+      const chat = document.getElementById('prem-chat');
+      if (!chat) return;
+      if (premMessages.length === 0) return;
+      // Remove welcome
+      const welcome = chat.querySelector('.prem-welcome');
+      if (welcome) welcome.style.display = 'none';
+      // Render messages
+      let existingMsgs = chat.querySelectorAll('.prem-msg');
+      existingMsgs.forEach(m => m.remove());
+      premMessages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'prem-msg ' + (msg.role === 'user' ? 'prem-msg-user' : '');
+        const avatarClass = msg.role === 'user' ? 'prem-avatar-user' : 'prem-avatar-ai';
+        const avatarContent = msg.role === 'user' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#999"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' : '<svg viewBox="0 0 120 120" width="24" height="24"><circle cx="60" cy="62" r="45" fill="#F5923A"/><circle cx="60" cy="18" r="8" fill="white" stroke="#ccc" stroke-width="1"/><path d="M35 85Q60 80 85 85Q88 95 85 107Q60 112 35 107Q32 95 35 85Z" fill="white" opacity="0.85"/><ellipse cx="44" cy="55" rx="5" ry="6" fill="white"/><ellipse cx="76" cy="55" rx="5" ry="6" fill="white"/><ellipse cx="46" cy="55" rx="3" ry="4" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="3" ry="4" fill="#2D1B0E"/><path d="M42 70Q60 82 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B"/></svg>';
+        const bubbleClass = msg.role === 'user' ? 'prem-bubble-user' : 'prem-bubble-ai';
+        div.innerHTML = '<div class="prem-avatar ' + avatarClass + '">' + avatarContent + '</div><div class="prem-bubble ' + bubbleClass + '">' + msg.content + '</div>';
+        chat.appendChild(div);
+      });
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function premSendSuggestion(el) {
+      const text = "J'ai pris mon " + el.textContent.toLowerCase();
+      document.getElementById('prem-input-text').value = text;
+      premSendMessage();
+    }
+
+    async function premSendMessage() {
+      const input = document.getElementById('prem-input-text');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      // Add user message
+      premMessages.push({role:'user', content: text});
+      renderPremChat();
+      // Add typing indicator
+      const chat = document.getElementById('prem-chat');
+      const typing = document.createElement('div');
+      typing.className = 'prem-msg';
+      typing.id = 'prem-typing';
+      typing.innerHTML = '<div class="prem-avatar prem-avatar-ai"><svg viewBox="0 0 120 120" width="24" height="24"><circle cx="60" cy="62" r="45" fill="#F5923A"/><circle cx="60" cy="18" r="8" fill="white" stroke="#ccc" stroke-width="1"/><path d="M35 85Q60 80 85 107Q60 112 35 107Q32 95 35 85Z" fill="white" opacity="0.85"/><ellipse cx="46" cy="55" rx="3" ry="4" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="3" ry="4" fill="#2D1B0E"/><path d="M42 70Q60 82 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B"/></svg></div><div class="prem-bubble prem-bubble-ai"><div class="prem-analyzing"><div class="prem-analyzing-dot"></div><div class="prem-analyzing-dot" style="animation-delay:0.2s"></div><div class="prem-analyzing-dot" style="animation-delay:0.4s"></div> Analyse en cours...</div></div>';
+      chat.appendChild(typing);
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const diabType = localStorage.getItem('diabeteType') || '1';
+        const sysPrompt = 'Tu es Dr. DiabeteFood, un assistant nutritionnel expert en diab\u00e8te de type ' + diabType + '. L\'utilisateur te d\u00e9crit ce qu\'il a mang\u00e9. Tu dois: 1) Identifier chaque aliment et estimer les portions 2) Calculer les macros (calories, glucides, prot\u00e9ines, lipides) et l\'index glyc\u00e9mique estim\u00e9 3) Donner un avis bref adapt\u00e9 au diab\u00e8te T' + diabType + '. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil court pour diab\u00e9tique>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}';
+
+        const response = await fetch(API_URL, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            model:'claude-haiku-4-5-20251001',
+            max_tokens:1024,
+            system:sysPrompt,
+            messages:[{role:'user',content:text}]
+          })
+        });
+        const data = await response.json();
+        const aiText = data.content?.[0]?.text || '';
+        const jsonMatch = aiText.match(/\\{[\\s\\S]*\\}/);
+        if (!jsonMatch) throw new Error('No JSON');
+        const r = JSON.parse(jsonMatch[0]);
+
+        // Build meal card HTML
+        let cardHtml = '<div class="prem-meal-card">';
+        (r.aliments||[]).forEach(a => {
+          cardHtml += '<div class="prem-meal-item"><div><span class="prem-meal-name">' + a.nom + '</span> <span class="prem-meal-macros">(' + (a.portion||'') + ')</span></div><div class="prem-meal-macros">' + a.calories + ' kcal \u00b7 ' + a.glucides + 'g gluc</div></div>';
+        });
+        const t = r.total || {};
+        cardHtml += '<div class="prem-meal-total">';
+        cardHtml += '<div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.calories||0) + '</div><div class="prem-meal-total-label">Calories</div><div class="prem-meal-total-bar"><div class="prem-stat-fill" style="width:' + Math.min(100, (t.calories||0)/20) + '%;background:var(--accent)"></div></div></div>';
+        cardHtml += '<div class="prem-meal-total-item"><div class="prem-meal-total-val" style="color:var(--accent)">' + (t.glucides||0) + 'g</div><div class="prem-meal-total-label">Glucides</div><div class="prem-meal-total-bar"><div class="prem-stat-fill" style="width:' + Math.min(100, (t.glucides||0)/1.5) + '%;background:var(--accent)"></div></div></div>';
+        cardHtml += '<div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.proteines||0) + 'g</div><div class="prem-meal-total-label">Prot\u00e9ines</div><div class="prem-meal-total-bar"><div class="prem-stat-fill" style="width:' + Math.min(100, (t.proteines||0)/1.2) + '%;background:#43a047"></div></div></div>';
+        cardHtml += '<div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.lipides||0) + 'g</div><div class="prem-meal-total-label">Lipides</div><div class="prem-meal-total-bar"><div class="prem-stat-fill" style="width:' + Math.min(100, (t.lipides||0)/1.5) + '%;background:#2196f3"></div></div></div>';
+        cardHtml += '</div></div>';
+        if (r.avis) cardHtml += '<div style="margin-top:8px;font-size:0.82rem;color:#555;">' + r.avis + '</div>';
+        cardHtml += '<div style="margin-top:4px;font-size:0.7rem;color:#bbb;">' + (r.heure || new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})) + '</div>';
+
+        premMessages.push({role:'assistant', content: cardHtml});
+        // Update totals
+        premDayTotals.calories += (t.calories||0);
+        premDayTotals.glucides += (t.glucides||0);
+        premDayTotals.proteines += (t.proteines||0);
+        premDayTotals.lipides += (t.lipides||0);
+        if (t.ig_moyen) { premDayTotals.ig_sum += t.ig_moyen; premDayTotals.ig_count++; }
+        premDayTotals.meals.push(r);
+        localStorage.setItem('prem_messages_' + new Date().toDateString(), JSON.stringify(premMessages));
+        localStorage.setItem('prem_totals_' + new Date().toDateString(), JSON.stringify(premDayTotals));
+      } catch(e) {
+        premMessages.push({role:'assistant', content:'D\u00e9sol\u00e9, je n\'ai pas pu analyser ce repas. Pouvez-vous d\u00e9crire plus pr\u00e9cis\u00e9ment les aliments et quantit\u00e9s ?'});
+      }
+      const typingEl = document.getElementById('prem-typing');
+      if (typingEl) typingEl.remove();
+      renderPremChat();
+      updatePremSummary();
+    }
+
+    async function premHandlePhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64 = e.target.result;
+        // Show photo in chat
+        premMessages.push({role:'user', content:'<div class="prem-photo-preview"><img src="' + base64 + '" style="max-height:200px;object-fit:cover;"></div>'});
+        renderPremChat();
+        // Add analyzing indicator
+        const chat = document.getElementById('prem-chat');
+        const typing = document.createElement('div');
+        typing.className = 'prem-msg';
+        typing.id = 'prem-typing';
+        typing.innerHTML = '<div class="prem-avatar prem-avatar-ai"><svg viewBox="0 0 120 120" width="24" height="24"><circle cx="60" cy="62" r="45" fill="#F5923A"/></svg></div><div class="prem-bubble prem-bubble-ai"><div class="prem-analyzing"><div class="prem-analyzing-dot"></div><div class="prem-analyzing-dot" style="animation-delay:0.2s"></div><div class="prem-analyzing-dot" style="animation-delay:0.4s"></div> Analyse de la photo...</div></div>';
+        chat.appendChild(typing);
+        chat.scrollTop = chat.scrollHeight;
+        try {
+          const diabType = localStorage.getItem('diabeteType') || '1';
+          const response = await fetch(API_URL, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              model:'claude-haiku-4-5-20251001',
+              max_tokens:1024,
+              system:'Tu es Dr. DiabeteFood. Analyse cette photo de repas pour un diab\u00e9tique T' + diabType + '. Identifie chaque aliment, estime les portions et calcule les macros. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}',
+              messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:base64.split(',')[1]}},{type:'text',text:'Analyse ce repas pour un diab\u00e9tique'}]}]
+            })
+          });
+          const data = await response.json();
+          const aiText = data.content?.[0]?.text || '';
+          const jsonMatch = aiText.match(/\\{[\\s\\S]*\\}/);
+          if (jsonMatch) {
+            const r = JSON.parse(jsonMatch[0]);
+            // Same card building as text messages
+            let cardHtml = '<div class="prem-meal-card">';
+            (r.aliments||[]).forEach(a => {
+              cardHtml += '<div class="prem-meal-item"><div><span class="prem-meal-name">' + a.nom + '</span> <span class="prem-meal-macros">(' + (a.portion||'') + ')</span></div><div class="prem-meal-macros">' + a.calories + ' kcal</div></div>';
+            });
+            const t = r.total||{};
+            cardHtml += '<div class="prem-meal-total"><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.calories||0) + '</div><div class="prem-meal-total-label">Cal</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val" style="color:var(--accent)">' + (t.glucides||0) + 'g</div><div class="prem-meal-total-label">Gluc</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.proteines||0) + 'g</div><div class="prem-meal-total-label">Prot</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.lipides||0) + 'g</div><div class="prem-meal-total-label">Lip</div></div></div></div>';
+            if (r.avis) cardHtml += '<div style="margin-top:8px;font-size:0.82rem;color:#555;">' + r.avis + '</div>';
+            premMessages.push({role:'assistant', content:cardHtml});
+            premDayTotals.calories += (t.calories||0);
+            premDayTotals.glucides += (t.glucides||0);
+            localStorage.setItem('prem_messages_' + new Date().toDateString(), JSON.stringify(premMessages));
+            localStorage.setItem('prem_totals_' + new Date().toDateString(), JSON.stringify(premDayTotals));
+          } else {
+            premMessages.push({role:'assistant', content:'Je n\'ai pas pu identifier les aliments sur la photo. Pouvez-vous me d\u00e9crire le repas ?'});
+          }
+        } catch(e) {
+          premMessages.push({role:'assistant', content:'Erreur d\'analyse photo. D\u00e9crivez-moi le repas \u00e0 la place.'});
+        }
+        const typingEl = document.getElementById('prem-typing');
+        if (typingEl) typingEl.remove();
+        renderPremChat();
+        updatePremSummary();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generatePremiumReport() {
+      if (premDayTotals.meals.length === 0) { alert('Aucun repas enregistr\u00e9 aujourd\'hui'); return; }
+      const diabType = localStorage.getItem('diabeteType') || '1';
+      let report = 'RAPPORT NUTRITIONNEL - Diab\u00e8te Type ' + diabType + '\n';
+      report += 'Date: ' + new Date().toLocaleDateString('fr-FR') + '\n';
+      report += '========================================\n\n';
+      report += 'TOTAUX JOURNALIERS:\n';
+      report += '  Calories: ' + Math.round(premDayTotals.calories) + ' kcal\n';
+      report += '  Glucides: ' + Math.round(premDayTotals.glucides) + 'g\n';
+      report += '  Prot\u00e9ines: ' + Math.round(premDayTotals.proteines) + 'g\n';
+      report += '  Lipides: ' + Math.round(premDayTotals.lipides) + 'g\n';
+      if (premDayTotals.ig_count > 0) report += '  IG moyen: ' + Math.round(premDayTotals.ig_sum / premDayTotals.ig_count) + '\n';
+      report += '\nD\u00c9TAIL DES REPAS:\n';
+      premDayTotals.meals.forEach((meal, i) => {
+        report += '\n--- Repas ' + (i+1) + ' (' + (meal.heure||'') + ') ---\n';
+        (meal.aliments||[]).forEach(a => {
+          report += '  ' + a.nom + ' (' + (a.portion||'') + '): ' + a.calories + 'kcal, ' + a.glucides + 'g gluc, IG ' + (a.ig||'?') + '\n';
+        });
+        if (meal.avis) report += '  Avis: ' + meal.avis + '\n';
+      });
+      report += '\n========================================\n';
+      report += 'G\u00e9n\u00e9r\u00e9 par DiabeteFood Premium\n';
+
+      // Share or download
+      if (navigator.share) {
+        navigator.share({title:'Rapport DiabeteFood', text:report}).catch(()=>{});
+      } else {
+        const blob = new Blob([report], {type:'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'rapport-diabetefood-' + new Date().toISOString().slice(0,10) + '.txt';
+        a.click();
+      }
+    }
+
+    // Init premium when tab is shown
+    const origSwitchPage = typeof switchPage === 'function' ? switchPage : null;
+
+    </script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1347,7 +1578,73 @@
     @keyframes mascotBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     .mascot-wave { animation: mascotWave 1.5s ease-in-out infinite; }
     @keyframes mascotWave { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(5deg)} 75%{transform:rotate(-5deg)} }
-</style>
+
+  /* ===== PREMIUM CHAT ===== */
+  .prem-header { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid #f0f0f0; }
+  .prem-header-title { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.1rem; color:var(--text); }
+  .prem-header-badge { background:linear-gradient(135deg,#ff6b00,#ff9a3c); color:white; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:20px; }
+
+  .prem-calendar { display:flex; justify-content:space-between; padding:10px 16px; gap:4px; }
+  .prem-day { text-align:center; flex:1; padding:6px 2px; border-radius:12px; cursor:pointer; transition:all 0.2s; }
+  .prem-day.active { background:var(--accent); color:white; }
+  .prem-day-name { font-size:0.65rem; font-weight:600; color:#999; text-transform:uppercase; }
+  .prem-day.active .prem-day-name { color:rgba(255,255,255,0.8); }
+  .prem-day-num { font-size:0.95rem; font-weight:700; margin-top:2px; }
+
+  .prem-summary { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:8px 16px; }
+  .prem-stat { background:var(--surface2); border-radius:12px; padding:10px; text-align:center; }
+  .prem-stat-value { font-size:1.2rem; font-weight:800; color:var(--text); }
+  .prem-stat-label { font-size:0.65rem; color:#999; margin-top:2px; }
+  .prem-stat-bar { height:4px; background:#e0e0e0; border-radius:2px; margin-top:6px; overflow:hidden; }
+  .prem-stat-fill { height:100%; border-radius:2px; }
+
+  .prem-chat { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:12px; }
+  .prem-msg { display:flex; gap:8px; animation:fadeInUp 0.3s ease; }
+  .prem-msg-user { flex-direction:row-reverse; }
+  .prem-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .prem-avatar-ai { background:linear-gradient(135deg,#fff3e6,#ffe0c0); border:2px solid var(--accent); }
+  .prem-avatar-user { background:var(--surface2); }
+  .prem-bubble { max-width:78%; border-radius:16px; padding:10px 14px; font-size:0.88rem; line-height:1.5; }
+  .prem-bubble-ai { background:white; border:1px solid #f0f0f0; border-radius:16px 16px 16px 4px; }
+  .prem-bubble-user { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border-radius:16px 16px 4px 16px; }
+
+  .prem-meal-card { background:#fafafa; border-radius:12px; padding:10px; margin-top:8px; }
+  .prem-meal-item { display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; }
+  .prem-meal-name { font-weight:600; color:var(--text); }
+  .prem-meal-macros { color:#888; font-size:0.75rem; }
+  .prem-meal-total { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; padding-top:8px; border-top:1px solid #eee; }
+  .prem-meal-total-item { text-align:center; }
+  .prem-meal-total-val { font-weight:800; font-size:0.9rem; }
+  .prem-meal-total-label { font-size:0.6rem; color:#999; }
+  .prem-meal-total-bar { height:3px; background:#e0e0e0; border-radius:2px; margin-top:3px; }
+
+  .prem-photo-preview { border-radius:12px; overflow:hidden; margin-top:6px; position:relative; }
+  .prem-photo-preview img { width:100%; border-radius:12px; }
+  .prem-analyzing { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:0.82rem; color:var(--accent); font-weight:600; }
+  .prem-analyzing-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 1s infinite; }
+
+  .prem-input-bar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-top:1px solid #f0f0f0; background:white; }
+  .prem-input { flex:1; border:1px solid #e0e0e0; border-radius:24px; padding:10px 16px; font-size:0.88rem; font-family:inherit; outline:none; transition:border-color 0.2s; }
+  .prem-input:focus { border-color:var(--accent); }
+  .prem-input-btn { width:36px; height:36px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; background:none; }
+  .prem-input-btn:hover { background:var(--surface2); }
+  .prem-send-btn { background:var(--accent) !important; color:white; }
+  .prem-send-btn:hover { background:var(--accent2) !important; }
+
+  .prem-report-btn { display:flex; align-items:center; justify-content:center; gap:6px; margin:8px 16px; padding:12px; background:linear-gradient(135deg,#ff6b00,#ff9a3c); color:white; border:none; border-radius:14px; font-weight:700; font-size:0.88rem; font-family:inherit; cursor:pointer; }
+
+  .prem-welcome { text-align:center; padding:30px 20px; }
+  .prem-mascot-doc { width:80px; height:80px; margin:0 auto 12px; }
+  .prem-welcome-title { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.05rem; color:var(--text); }
+  .prem-welcome-text { font-size:0.82rem; color:#888; margin-top:6px; line-height:1.5; }
+  .prem-suggestions { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:14px; }
+  .prem-suggestion { background:white; border:1px solid #ffe0c0; border-radius:20px; padding:6px 14px; font-size:0.78rem; color:var(--accent); font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .prem-suggestion:hover { background:#fff5eb; }
+
+  #page-premium { display:flex; flex-direction:column; height:calc(100vh - 70px); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  </style>
 </head>
 <body>
 
@@ -1520,22 +1817,7 @@
   </div>
 
   <!-- PAGE PREMIUM -->
-  <div class="page" id="page-premium">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;min-height:60vh;">
-        <div style="width:80px;height:80px;background:linear-gradient(135deg,#f5f5f5,#ffe5cc);border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        </div>
-        <h2 style="font-family:Nunito,sans-serif;font-weight:800;font-size:1.4rem;color:#333;margin:0 0 8px;">Premium arrive bientôt</h2>
-        <p style="color:#999;font-size:0.9rem;max-width:280px;line-height:1.5;margin:0 0 24px;">Les fonctionnalités Premium sont en cours de développement. Elles seront disponibles très prochainement !</p>
-        <div style="background:var(--surface);border-radius:16px;padding:20px;width:100%;max-width:320px;border:1px solid rgba(255,107,0,0.1);">
-          <div style="font-weight:700;color:#333;margin-bottom:12px;">Ce qui arrive :</div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#666;font-size:0.85rem;"><span style="color:var(--accent);">✓</span> Scans illimités</div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#666;font-size:0.85rem;"><span style="color:var(--accent);">✓</span> Comparateur de produits</div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#666;font-size:0.85rem;"><span style="color:var(--accent);">✓</span> Alertes glucides personnalisées</div>
-          <div style="display:flex;align-items:center;gap:10px;color:#666;font-size:0.85rem;"><span style="color:var(--accent);">✓</span> Rapport PDF pour votre médecin</div>
-        </div>
-      </div>
-    </div>
+  <div class="page" id="page-premium"><div class="prem-header"><div style="width:28px;height:28px;"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="28" height="28"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg></div><div class="prem-header-title">Mon Journal</div><span class="prem-header-badge">PREMIUM</span><div style="flex:1"></div><button class="prem-report-btn" onclick="generatePremiumReport()" style="margin:0;padding:6px 12px;font-size:0.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Rapport</button></div><div class="prem-calendar" id="prem-calendar"></div><div class="prem-summary" id="prem-summary"><div class="prem-stat"><div class="prem-stat-value" id="prem-carbs">0g</div><div class="prem-stat-label">Glucides</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:var(--accent)"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-cal">0</div><div class="prem-stat-label">Calories</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#43a047"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-ig">--</div><div class="prem-stat-label">IG moyen</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#2196f3"></div></div></div></div><div class="prem-chat" id="prem-chat"><div class="prem-welcome"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="80" height="80"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg><div class="prem-welcome-title">Dr. DiabeteFood</div><div class="prem-welcome-text">Bonjour ! Je suis votre assistant nutrition.<br>Dites-moi ce que vous avez mangé ou envoyez une photo de votre repas.</div><div class="prem-suggestions"><div class="prem-suggestion" onclick="premSendSuggestion(this)">Petit-déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Dîner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Collation</div></div></div></div><div class="prem-input-bar"><input type="file" id="prem-photo-input" accept="image/*" capture="environment" style="display:none" onchange="premHandlePhoto(event)"><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Caméra"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button><input class="prem-input" id="prem-input-text" type="text" placeholder="Qu'avez-vous mangé ?" onkeydown="if(event.key==='Enter')premSendMessage()"><button class="prem-input-btn prem-send-btn" onclick="premSendMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
 </main>
 
 <!-- NAV -->
@@ -1822,6 +2104,7 @@ function switchPage(p) {
   document.getElementById('page-' + p).classList.add('active');
   const navBtn = document.getElementById('nav-' + p);
   if (navBtn) navBtn.classList.add('active');
+    if (p === 'premium') initPremiumCalendar();
   if (p === 'history') renderHistory();
   if (p === 'premium') { updatePDFPreview(); document.getElementById('alert-toggle')?.classList.toggle('on', alertEnabled); document.getElementById('alert-threshold').value = alertThreshold; }
   if (p !== 'scan' && scannerActive) stopScanner();
