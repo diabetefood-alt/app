@@ -664,6 +664,26 @@
     flex-shrink: 0;
   }
 
+  .advice-extra {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #fff8f0;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: #5c3010;
+    border: 1px solid #ffe5cc;
+  }
+  .advice-extra strong { color: #c45800; }
+  .advice-extra-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .advice-alternative {
+    background: #f0f9f0;
+    border-color: #c8e6c8;
+  }
+  .advice-alternative strong { color: #2e7d32; }
+
   /* GLYCEMIC INDEX */
   .gi-section {
     padding: 0 20px 18px;
@@ -1967,8 +1987,25 @@ async function analyzeBarcode(barcode) {
     productName = product.product_name_fr || product.product_name || "Produit sans nom";
     productImageUrl = product.image_front_url || product.image_url || null;
     const n = product.nutriments || {};
-    nutrientsData = { glucides:n['carbohydrates_100g'], sucres:n['sugars_100g'], fibres:n['fiber_100g'], proteines:n['proteins_100g'], lipides:n['fat_100g'], calories:n['energy-kcal_100g'] };
-    nutritionText = `Produit: ${productName}\nValeurs pour 100g:\n` + Object.entries(nutrientsData).map(([k,v]) => v!=null?`- ${k}: ${v}g`:null).filter(Boolean).join('\n');
+    nutrientsData = { glucides:n['carbohydrates_100g'], sucres:n['sugars_100g'], fibres:n['fiber_100g'], proteines:n['proteins_100g'], lipides:n['fat_100g'], calories:n['energy-kcal_100g'], sel:n['salt_100g'], graisses_sat:n['saturated-fat_100g'] };
+    // Données enrichies Open Food Facts
+    const ingredients = (product.ingredients_text_fr || product.ingredients_text || "").substring(0, 300);
+    const nutriScore = product.nutriscore_grade || product.nutrition_grades || "inconnu";
+    const novaGroup = product.nova_group || "inconnu";
+    const category = product.categories || product.categories_tags?.[0] || "";
+    const allergens = product.allergens_tags?.map(a => a.replace('en:','')).join(', ') || "aucun";
+    const servingSize = product.serving_size || "";
+    const additives = (product.additives_tags || []).slice(0, 5).map(a => a.replace('en:','')).join(', ') || "aucun";
+
+    nutritionText = `Produit: ${productName}\nCatégorie: ${category}\nNutri-Score: ${nutriScore.toUpperCase()}\nNOVA (transformation): ${novaGroup}/4\nTaille portion: ${servingSize || 'non indiquée'}\nAllergènes: ${allergens}\nAdditifs principaux: ${additives}\n\nIngrédients: ${ingredients || 'non disponibles'}\n\nValeurs pour 100g:\n` + Object.entries(nutrientsData).map(([k,v]) => v!=null?`- ${k}: ${v}g`:null).filter(Boolean).join('\n');
+
+    // Ajouter contexte historique si produits déjà scannés
+    if (scanHistory.length > 0) {
+      const recentCarbs = scanHistory.slice(0, 5).filter(h => h.nutriments?.glucides && h.nutriments.glucides !== 'N/A').map(h => `${h.nom}: ${h.nutriments.glucides}`);
+      if (recentCarbs.length > 0) {
+        nutritionText += `\n\nProduits scannés récemment (pour contexte):\n${recentCarbs.join(', ')}`;
+      }
+    }
   } else {
     nutritionText = `Code-barres: ${barcode}\nAucune donnée nutritionnelle trouvée.`;
   }
@@ -1976,7 +2013,41 @@ async function analyzeBarcode(barcode) {
   const typeLabel = diabeteType === 1 ? "TYPE 1 (insulino-dépendant)" : "TYPE 2 (non insulino-dépendant)";
   const typeAdviceContext = diabeteType === 1 ? "Pour le T1: focus sur le comptage des glucides pour le calcul d'insuline, index glycémique, risque d'hypoglycémie/hyperglycémie rapide." : "Pour le T2: focus sur la résistance à l'insuline, perte de poids, charge glycémique totale, fibres, éviter les sucres rapides, portions.";
 
-  const prompt = `Tu es un expert en nutrition pour les personnes atteintes de DIABÈTE DE ${typeLabel}.\n${typeAdviceContext}\n\nVoici les informations nutritionnelles d'un aliment (pour 100g):\n${nutritionText}\n\nAnalyse cet aliment et réponds UNIQUEMENT en JSON valide avec ce format exact:\n{\n  "nom": "nom de l'aliment (court, max 30 char)",\n  "score": <0-100, où 100 = parfait pour ce type de diabète>,\n  "verdict": "excellent" | "acceptable" | "à éviter",\n  "index_glycemique": <0-100, estimation>,\n  "nutriments": {\n    "glucides": "<valeur>g" ou "N/A",\n    "sucres": "<valeur>g" ou "N/A",\n    "fibres": "<valeur>g" ou "N/A",\n    "calories": "<valeur> kcal" ou "N/A"\n  },\n  "conseils": [\n    "<conseil spécifique diabète T${diabeteType}, max 80 char>",\n    "<conseil spécifique diabète T${diabeteType}, max 80 char>",\n    "<conseil spécifique diabète T${diabeteType}, max 80 char>"\n  ]\n}`;
+  const prompt = `Tu es un diabétologue-nutritionniste expert. Tu parles à un patient diabétique de ${typeLabel} qui vient de scanner un produit au supermarché. Il a besoin de conseils CONCRETS et PRATIQUES.
+
+${typeAdviceContext}
+
+DONNÉES DU PRODUIT:
+${nutritionText}
+
+RÈGLES POUR TES CONSEILS:
+- Sois SPÉCIFIQUE au produit (pas de conseils génériques comme "consultez votre médecin")
+- Mentionne des CHIFFRES concrets (glucides par portion, unités d'insuline estimées pour T1)
+- Donne un conseil sur le MOMENT de consommation (avant/après repas, à éviter le soir, etc.)
+- Si le produit est mauvais, propose une ALTERNATIVE concrète du même rayon
+- Analyse les INGRÉDIENTS si disponibles (sucres cachés, édulcorants, index glycémique réel vs apparent)
+- Prends en compte le Nutri-Score et le niveau de transformation NOVA
+
+Réponds UNIQUEMENT en JSON valide:
+{
+  "nom": "nom court max 30 char",
+  "score": 0-100 (100 = parfait pour diabète T${diabeteType}),
+  "verdict": "excellent" | "acceptable" | "à éviter",
+  "index_glycemique": 0-100 estimation,
+  "nutriments": {
+    "glucides": "<val>g" ou "N/A",
+    "sucres": "<val>g" ou "N/A",
+    "fibres": "<val>g" ou "N/A",
+    "calories": "<val> kcal" ou "N/A"
+  },
+  "conseils": [
+    "<conseil pratique sur CE produit spécifiquement, max 100 char>",
+    "<conseil sur la portion/timing pour un diabétique T${diabeteType}, max 100 char>",
+    "<conseil sur les ingrédients ou ce qu'il faut surveiller, max 100 char>"
+  ],
+  "alternative": "<suggestion d'un produit similaire mais meilleur pour le diabète, max 80 char, ou null si le produit est déjà excellent>",
+  "portion_ideale": "<portion recommandée pour un diabétique, ex: '1 cuillère à soupe (15g)', ou null>"
+}`;
 
   try {
     const response = await fetch(API_URL, {
@@ -1984,8 +2055,8 @@ async function analyzeBarcode(barcode) {
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         model:"claude-haiku-4-5-20251001",
-        max_tokens:800,
-        system:`Tu es un assistant médical spécialisé en diabète de type ${diabeteType}. Réponds uniquement en JSON valide, sans markdown ni backticks.`,
+        max_tokens:1024,
+        system:`Tu es un diabétologue-nutritionniste qui donne des conseils pratiques et personnalisés aux patients diabétiques de type ${diabeteType}. Tu analyses les produits alimentaires en profondeur (ingrédients, transformation, impact glycémique réel). Réponds uniquement en JSON valide, sans markdown ni backticks. Sois direct, concret et utile.`,
         messages:[{role:"user",content:prompt}]
       })
     });
@@ -2083,10 +2154,22 @@ function showResult(r) {
     `<div class="nutrient-pill"><div class="nutrient-icon">${n.icon}</div><div class="nutrient-info"><div class="nutrient-value">${n.value}</div><div class="nutrient-name">${n.label}/100g</div></div></div>`
   ).join('');
 
-  document.getElementById('advice-title').textContent = `⚕ Conseils Diabète T${diabeteType}`;
-  document.getElementById('advice-list').innerHTML = (r.conseils||[]).map(a =>
-    `<div class="advice-item"><div class="advice-dot"></div><span>${a}</span></div>`
-  ).join('');
+  document.getElementById('advice-title').textContent = `🩺 CONSEILS DIABÈTE T${diabeteType}`;
+    let adviceHTML = (r.conseils||[]).map(a =>
+      `<div class="advice-item"><div class="advice-dot"></div><span>${a}</span></div>`
+    ).join('');
+
+    // Portion idéale
+    if (r.portion_ideale) {
+      adviceHTML += `<div class="advice-extra"><span class="advice-extra-icon">⚖️</span><div><strong>Portion recommandée :</strong> ${r.portion_ideale}</div></div>`;
+    }
+
+    // Alternative
+    if (r.alternative) {
+      adviceHTML += `<div class="advice-extra advice-alternative"><span class="advice-extra-icon">💡</span><div><strong>Alternative :</strong> ${r.alternative}</div></div>`;
+    }
+
+    document.getElementById('advice-list').innerHTML = adviceHTML;
 
   document.getElementById('result-card').style.display = 'block';
   document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'nearest'});
