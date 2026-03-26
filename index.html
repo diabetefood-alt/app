@@ -663,6 +663,12 @@
     margin-top: 6px;
     flex-shrink: 0;
   }
+  .advice-dot-green {
+    background: linear-gradient(135deg, #43a047, #66bb6a);
+  }
+  .advice-dot-red {
+    background: linear-gradient(135deg, #e53935, #ef5350);
+  }
 
   .advice-extra {
     display: flex;
@@ -2155,8 +2161,9 @@ function showResult(r) {
   ).join('');
 
   document.getElementById('advice-title').textContent = `🩺 CONSEILS DIABÈTE T${diabeteType}`;
+    const dotColor = r.verdict === 'excellent' ? ' advice-dot-green' : r.verdict === '\u00e0 \u00e9viter' ? ' advice-dot-red' : '';
     let adviceHTML = (r.conseils||[]).map(a =>
-      `<div class="advice-item"><div class="advice-dot"></div><span>${a}</span></div>`
+      `<div class="advice-item"><div class="advice-dot${dotColor}"></div><span>${a}</span></div>`
     ).join('');
 
     // Portion idéale
