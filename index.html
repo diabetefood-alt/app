@@ -2038,9 +2038,9 @@ function showResult(r) {
 
   const imgContainer = document.getElementById('product-img-container');
   if (r.imageUrl) {
-    imgContainer.innerHTML = `<img class="product-img-banner" src="${r.imageUrl}" alt="${r.nom}" onerror="this.parentElement.imgContainer.innerHTML = ''; imgContainer.appendChild(createMascotSVG(score >= 60 ? 'happy' : score >= 30 ? 'neutral' : 'worried', 80));
+    imgContainer.innerHTML = ''; var img = document.createElement('img'); img.className = 'product-img-banner'; img.src = r.imageUrl; img.alt = r.nom; img.onerror = function(){ this.style.display='none'; }; imgContainer.appendChild(img);
   } else {
-    imgContainer.innerHTML = `<div class="product-img-placeholder">■</div>`;
+    imgContainer.innerHTML = ''; imgContainer.appendChild(createMascotSVG(score >= 60 ? 'happy' : score >= 30 ? 'neutral' : 'worried', 80));
   }
 
   document.getElementById('result-name').textContent = r.nom || 'Aliment analysé';
