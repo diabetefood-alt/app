@@ -2013,7 +2013,8 @@ async function analyzeBarcode(barcode) {
       setTimeout(() => switchPage('premium'), 1200);
     }
 
-    showResult(result);
+    document.getElementById('result-card').innerHTML = originalResultCardHTML;
+        showResult(result);
     scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:productImageUrl});
         localStorage.setItem('diabetefood_history', JSON.stringify(scanHistory));
     if (scanHistory.length > 20) scanHistory.pop();
@@ -2181,6 +2182,7 @@ if ('serviceWorker' in navigator) {
         document.getElementById('loading-card').style.display = 'none';
         result.imageUrl = null;
         checkGlucideAlert(nutrientsData.glucides);
+        document.getElementById('result-card').innerHTML = originalResultCardHTML;
         showResult(result);
         scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:null});
         localStorage.setItem('diabetefood_history', JSON.stringify(scanHistory));
