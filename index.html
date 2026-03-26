@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>DiabeteFood — Scanner Alimentaire</title>
+<title>DiabeteFood â Scanner Alimentaire</title>
 <meta name="theme-color" content="#ff6b00">
-<meta name="description" content="Scannez les codes-barres alimentaires et obtenez une analyse adaptée au diabète de type 1 et type 2.">
+<meta name="description" content="Scannez les codes-barres alimentaires et obtenez une analyse adaptÃ©e au diabÃ¨te de type 1 et type 2.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -93,7 +93,7 @@
 
       try {
         const diabType = localStorage.getItem('diabeteType') || '1';
-        const sysPrompt = 'Tu es Dr. DiabeteFood, un assistant nutritionnel expert en diab\u00e8te de type ' + diabType + '. L\'utilisateur te d\u00e9crit ce qu\'il a mang\u00e9. Tu dois: 1) Identifier chaque aliment et estimer les portions 2) Calculer les macros (calories, glucides, prot\u00e9ines, lipides) et l\'index glyc\u00e9mique estim\u00e9 3) Donner un avis bref adapt\u00e9 au diab\u00e8te T' + diabType + '. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil court pour diab\u00e9tique>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}';
+        const sysPrompt = 'Reponds UNIQUEMENT en JSON valide sans backticks. Format: {"aliments":[{"nom":"x","calories":0,"glucides":0,"lipides":0,"proteines":0,"ig":0}],"total":{"calories":0,"glucides":0,"lipides":0,"proteines":0,"ig_moyen":0},"avis":"conseil court pour diabetique"}';
 
         const response = await fetch(API_URL, {
           method:'POST',
@@ -107,7 +107,7 @@
         });
         const data = await response.json();
         const aiText = data.content?.[0]?.text || '';
-        const jsonMatch = aiText.match(/\\{[\\s\\S]*\\}/);
+        const jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error('No JSON');
         const r = JSON.parse(jsonMatch[0]);
 
@@ -126,7 +126,7 @@
         if (r.avis) cardHtml += '<div style="margin-top:8px;font-size:0.82rem;color:#555;">' + r.avis + '</div>';
         cardHtml += '<div style="margin-top:4px;font-size:0.7rem;color:#bbb;">' + (r.heure || new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})) + '</div>';
 
-        premMessages.push({role:'assistant', content: cardHtml});
+        premMessages.push({role:'assistant', content: cardHtml, isHTML: true});
         // Update totals
         premDayTotals.calories += (t.calories||0);
         premDayTotals.glucides += (t.glucides||0);
@@ -176,7 +176,7 @@
           });
           const data = await response.json();
           const aiText = data.content?.[0]?.text || '';
-          const jsonMatch = aiText.match(/\\{[\\s\\S]*\\}/);
+          const jsonMatch = aiText.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const r = JSON.parse(jsonMatch[0]);
             // Same card building as text messages
@@ -187,7 +187,7 @@
             const t = r.total||{};
             cardHtml += '<div class="prem-meal-total"><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.calories||0) + '</div><div class="prem-meal-total-label">Cal</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val" style="color:var(--accent)">' + (t.glucides||0) + 'g</div><div class="prem-meal-total-label">Gluc</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.proteines||0) + 'g</div><div class="prem-meal-total-label">Prot</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.lipides||0) + 'g</div><div class="prem-meal-total-label">Lip</div></div></div></div>';
             if (r.avis) cardHtml += '<div style="margin-top:8px;font-size:0.82rem;color:#555;">' + r.avis + '</div>';
-            premMessages.push({role:'assistant', content:cardHtml});
+            premMessages.push({role:'assistant', content:cardHtml, isHTML:true});
             premDayTotals.calories += (t.calories||0);
             premDayTotals.glucides += (t.glucides||0);
             localStorage.setItem('prem_messages_' + new Date().toDateString(), JSON.stringify(premMessages));
@@ -1225,7 +1225,7 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── PREMIUM POPUP ── */
+  /* ââ PREMIUM POPUP ââ */
   .premium-overlay { display:none!important;
     position: fixed; inset: 0;
     background: rgba(10,4,0,0.85);
@@ -1318,7 +1318,7 @@
     font-weight: 600; padding: 4px 0;
   }
 
-  /* ── SCAN COUNTER ── */
+  /* ââ SCAN COUNTER ââ */
   .scan-counter { display:none!important;
     display: flex; align-items: center; gap: 6px;
     background: var(--surface); border: 2px solid #ffe5cc;
@@ -1347,7 +1347,7 @@
     background: linear-gradient(135deg, #fffbeb, #ffffff);
   }
 
-  /* ── COMPARATEUR ── */
+  /* ââ COMPARATEUR ââ */
   .compare-section {
     background: var(--surface);
     border: 2px solid #ffe5cc;
@@ -1426,7 +1426,7 @@
     font-weight: 600;
   }
 
-  /* ── ALERTE GLUCIDES ── */
+  /* ââ ALERTE GLUCIDES ââ */
   .alert-section {
     background: var(--surface);
     border: 2px solid #ffe5cc;
@@ -1479,7 +1479,7 @@
     animation: popIn 0.3s ease;
   }
 
-  /* ── RAPPORT PDF (page premium) ── */
+  /* ââ RAPPORT PDF (page premium) ââ */
   .premium-page-header {
     background: linear-gradient(135deg, #1a0500, #2d0e00);
     border-radius: var(--radius);
@@ -1651,7 +1651,7 @@
 
 <header>
   <div class="logo">Diabete<span>Food</span></div>
-  <div class="badge-t1" id="type-badge">Diabète Type 1</div>
+  <div class="badge-t1" id="type-badge">DiabÃ¨te Type 1</div>
 </header>
 
 <main>
@@ -1660,7 +1660,7 @@
 
     <div class="disclaimer">
       <div class="disclaimer-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-      <p>Outil informatif — consultez votre diabétologue.</p>
+      <p>Outil informatif â consultez votre diabÃ©tologue.</p>
     </div>
 
     <!-- SCAN COUNTER (freemium) -->
@@ -1668,7 +1668,7 @@
 
     <!-- TYPE SELECTOR -->
     <div class="type-selector">
-      <div class="type-label">Mon profil diabète</div>
+      <div class="type-label">Mon profil diabÃ¨te</div>
       <div class="type-tabs">
         <button class="type-tab active" id="tab-t1" onclick="selectType(1)">Type 1</button>
         <button class="type-tab" id="tab-t2" onclick="selectType(2)">Type 2</button>
@@ -1684,7 +1684,7 @@
       <!-- Idle state -->
       <div class="scanner-idle" id="scanner-idle">
         <div class="scan-idle-icon"><div id="scan-mascot" class="mascot-container mascot-bounce"></div></div>
-        <p class="scan-idle-text">Pointez votre caméra vers le code-barres d'un produit alimentaire</p>
+        <p class="scan-idle-text">Pointez votre camÃ©ra vers le code-barres d'un produit alimentaire</p>
         <button class="scan-btn" onclick="startScanner()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
@@ -1694,7 +1694,7 @@
         </button>
       </div>
 
-      <!-- Scanner active — FULLSCREEN -->
+      <!-- Scanner active â FULLSCREEN -->
       <div id="scanner-container">
         <button class="scanner-close-btn" onclick="stopScanner()">&#10005;</button>
         <div class="scan-overlay">
@@ -1718,7 +1718,7 @@
         <span class="manual-label">Ou entrez le code-barres manuellement</span>
         <div class="manual-row">
           <input class="manual-input" id="barcode-input" type="number" placeholder="Ex: 3017620422003" inputmode="numeric">
-          <button class="go-btn" onclick="analyzeBarcode(document.getElementById('barcode-input').value)">→</button>
+          <button class="go-btn" onclick="analyzeBarcode(document.getElementById('barcode-input').value)">â</button>
         </div>
       </div>
     </div>
@@ -1728,8 +1728,8 @@
       <div id="loading-mascot" class="mascot-container mascot-wave"></div>
         <div class="pulse-ring"></div>
       <div class="loading-text">
-        <strong>Analyse en cours…</strong>
-        Récupération des informations nutritionnelles
+        <strong>Analyse en coursâ¦</strong>
+        RÃ©cupÃ©ration des informations nutritionnelles
       </div>
     </div>
 
@@ -1739,29 +1739,29 @@
       <div id="product-img-container"></div>
 
       <div class="result-header">
-        <div class="verdict-icon" id="verdict-icon">✅</div>
+        <div class="verdict-icon" id="verdict-icon">â</div>
         <div>
-          <div class="result-name" id="result-name">—</div>
-          <span class="verdict-badge" id="verdict-badge">—</span>
+          <div class="result-name" id="result-name">â</div>
+          <span class="verdict-badge" id="verdict-badge">â</span>
         </div>
       </div>
 
       <div class="gi-section">
-        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Index glycémique estimé</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Index glycÃ©mique estimÃ©</div>
         <div class="gi-scale">
           <div class="gi-marker" id="gi-marker" style="left:50%"></div>
         </div>
         <div class="gi-labels">
-          <span>Bas (≤55)</span>
-          <span>Moyen (56–69)</span>
-          <span>Élevé (≥70)</span>
+          <span>Bas (â¤55)</span>
+          <span>Moyen (56â69)</span>
+          <span>ÃlevÃ© (â¥70)</span>
         </div>
       </div>
 
       <div class="score-section">
         <div class="score-label">
-          <span id="score-type-label">Score diabète T1</span>
-          <span id="score-text">—</span>
+          <span id="score-type-label">Score diabÃ¨te T1</span>
+          <span id="score-text">â</span>
         </div>
         <div class="score-bar">
           <div class="score-fill" id="score-fill"></div>
@@ -1770,7 +1770,7 @@
       </div>
 
       <div class="advice-section">
-        <div class="advice-title" id="advice-title">⚕ Conseils Diabète T1</div>
+        <div class="advice-title" id="advice-title">â Conseils DiabÃ¨te T1</div>
         <div id="advice-list"></div>
       </div>
     </div>
@@ -1784,7 +1784,7 @@
       <div class="empty-history">
         <div class="empty-history-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="empty-history-title">Aucun scan pour l'instant</div>
-        <p class="empty-history-sub">Scannez votre premier produit pour commencer à suivre vos aliments.</p>
+        <p class="empty-history-sub">Scannez votre premier produit pour commencer Ã  suivre vos aliments.</p>
         <button class="scan-btn" onclick="switchPage('scan')">Scanner un produit</button>
       </div>
     </div>
@@ -1793,32 +1793,32 @@
   <!-- PAGE INFOS -->
   <div class="page" id="page-info">
     <div class="info-card">
-      <h2 class="info-title">À propos de l'analyse</h2>
-      <p class="info-text">DiabeteFood analyse chaque produit selon plusieurs critères clés pour les personnes diabétiques :</p>
+      <h2 class="info-title">Ã propos de l'analyse</h2>
+      <p class="info-text">DiabeteFood analyse chaque produit selon plusieurs critÃ¨res clÃ©s pour les personnes diabÃ©tiques :</p>
       <div class="info-tags">
-        <div class="info-tag-row"><span class="info-tag green">Glucides</span> Impact sur la glycémie</div>
-        <div class="info-tag-row"><span class="info-tag blue">Index glycémique</span> Vitesse d'absorption</div>
-        <div class="info-tag-row"><span class="info-tag yellow">Charge glycémique</span> Impact global par portion</div>
+        <div class="info-tag-row"><span class="info-tag green">Glucides</span> Impact sur la glycÃ©mie</div>
+        <div class="info-tag-row"><span class="info-tag blue">Index glycÃ©mique</span> Vitesse d'absorption</div>
+        <div class="info-tag-row"><span class="info-tag yellow">Charge glycÃ©mique</span> Impact global par portion</div>
         <div class="info-tag-row"><span class="info-tag purple">Fibres</span> Ralentissent l'absorption</div>
-        <div class="info-tag-row"><span class="info-tag red">Sucres ajoutés</span> À limiter au maximum</div>
+        <div class="info-tag-row"><span class="info-tag red">Sucres ajoutÃ©s</span> Ã limiter au maximum</div>
       </div>
     </div>
 
     <div class="info-card">
       <h2 class="info-title">Comment utiliser</h2>
-      <p class="info-text">1. Scannez le code-barres d'un produit alimentaire<br>2. Consultez l'analyse détaillée adaptée au diabète<br>3. Retrouvez vos scans dans l'historique</p>
+      <p class="info-text">1. Scannez le code-barres d'un produit alimentaire<br>2. Consultez l'analyse dÃ©taillÃ©e adaptÃ©e au diabÃ¨te<br>3. Retrouvez vos scans dans l'historique</p>
     </div>
 
     <div class="info-warning">
       <div class="info-warning-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Avertissement</div>
-      <p class="info-warning-text">Cette application ne remplace pas un avis médical. Consultez toujours votre diabétologue ou nutritionniste avant de modifier votre régime alimentaire. Les données proviennent d'Open Food Facts et peuvent être incomplètes.</p>
+      <p class="info-warning-text">Cette application ne remplace pas un avis mÃ©dical. Consultez toujours votre diabÃ©tologue ou nutritionniste avant de modifier votre rÃ©gime alimentaire. Les donnÃ©es proviennent d'Open Food Facts et peuvent Ãªtre incomplÃ¨tes.</p>
     </div>
 
-    <p style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:20px;">DiabeteFood v1.0 — Fait avec soin pour les diabétiques</p>
+    <p style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:20px;">DiabeteFood v1.0 â Fait avec soin pour les diabÃ©tiques</p>
   </div>
 
   <!-- PAGE PREMIUM -->
-  <div class="page" id="page-premium"><div class="prem-header"><div style="width:28px;height:28px;"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="28" height="28"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg></div><div class="prem-header-title">Mon Journal</div><span class="prem-header-badge">PREMIUM</span><div style="flex:1"></div><button class="prem-report-btn" onclick="generatePremiumReport()" style="margin:0;padding:6px 12px;font-size:0.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Rapport</button></div><div class="prem-calendar" id="prem-calendar"></div><div class="prem-summary" id="prem-summary"><div class="prem-stat"><div class="prem-stat-value" id="prem-carbs">0g</div><div class="prem-stat-label">Glucides</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:var(--accent)"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-cal">0</div><div class="prem-stat-label">Calories</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#43a047"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-ig">--</div><div class="prem-stat-label">IG moyen</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#2196f3"></div></div></div></div><div class="prem-chat" id="prem-chat"><div class="prem-welcome"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="80" height="80"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg><div class="prem-welcome-title">Dr. DiabeteFood</div><div class="prem-welcome-text">Bonjour ! Je suis votre assistant nutrition.<br>Dites-moi ce que vous avez mangé ou envoyez une photo de votre repas.</div><div class="prem-suggestions"><div class="prem-suggestion" onclick="premSendSuggestion(this)">Petit-déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Dîner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Collation</div></div></div></div><div class="prem-input-bar"><input type="file" id="prem-photo-input" accept="image/*" capture="environment" style="display:none" onchange="premHandlePhoto(event)"><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Caméra"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button><input class="prem-input" id="prem-input-text" type="text" placeholder="Qu'avez-vous mangé ?" onkeydown="if(event.key==='Enter')premSendMessage()"><button class="prem-input-btn prem-send-btn" onclick="premSendMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
+  <div class="page" id="page-premium"><div class="prem-header"><div style="width:28px;height:28px;"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="28" height="28"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg></div><div class="prem-header-title">Mon Journal</div><span class="prem-header-badge">PREMIUM</span><div style="flex:1"></div><button class="prem-report-btn" onclick="generatePremiumReport()" style="margin:0;padding:6px 12px;font-size:0.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Rapport</button></div><div class="prem-calendar" id="prem-calendar"></div><div class="prem-summary" id="prem-summary"><div class="prem-stat"><div class="prem-stat-value" id="prem-carbs">0g</div><div class="prem-stat-label">Glucides</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:var(--accent)"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-cal">0</div><div class="prem-stat-label">Calories</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#43a047"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-ig">--</div><div class="prem-stat-label">IG moyen</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#2196f3"></div></div></div></div><div class="prem-chat" id="prem-chat"><div class="prem-welcome"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="80" height="80"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg><div class="prem-welcome-title">Dr. DiabeteFood</div><div class="prem-welcome-text">Bonjour ! Je suis votre assistant nutrition.<br>Dites-moi ce que vous avez mangÃ© ou envoyez une photo de votre repas.</div><div class="prem-suggestions"><div class="prem-suggestion" onclick="premSendSuggestion(this)">Petit-dÃ©jeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">DÃ©jeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">DÃ®ner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Collation</div></div></div></div><div class="prem-input-bar"><input type="file" id="prem-photo-input" accept="image/*" capture="environment" style="display:none" onchange="premHandlePhoto(event)"><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="CamÃ©ra"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button><input class="prem-input" id="prem-input-text" type="text" placeholder="Qu'avez-vous mangÃ© ?" onkeydown="if(event.key==='Enter')premSendMessage()"><button class="prem-input-btn prem-send-btn" onclick="premSendMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
 </main>
 
 <!-- NAV -->
@@ -1840,7 +1840,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="11" x2="12" y2="16"/>
     </svg>
-    À propos
+    Ã propos
   </button>
   <button class="nav-btn" id="nav-premium" onclick="switchPage('premium')" style="color:#ff9a3c;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1853,28 +1853,28 @@
 <!-- PREMIUM POPUP -->
 <div class="premium-overlay hidden" id="premium-overlay">
   <div class="premium-sheet">
-    <span class="premium-crown">★</span>
-    <div class="premium-title">Passez à <span>Premium</span></div>
-    <div class="premium-sub">Vous avez utilisé vos 5 scans gratuits aujourd'hui.<br>Débloquez les scans illimités et plus encore !</div>
+    <span class="premium-crown">â</span>
+    <div class="premium-title">Passez Ã  <span>Premium</span></div>
+    <div class="premium-sub">Vous avez utilisÃ© vos 5 scans gratuits aujourd'hui.<br>DÃ©bloquez les scans illimitÃ©s et plus encore !</div>
     <div class="premium-features">
-      <div class="premium-feature"><div class="premium-feature-icon">♾️</div>Scans illimités chaque jour</div>
-      <div class="premium-feature"><div class="premium-feature-icon">●</div>Comparateur de produits</div>
-      <div class="premium-feature"><div class="premium-feature-icon">⚠</div>Alertes glucides personnalisées</div>
-      <div class="premium-feature"><div class="premium-feature-icon">☰</div>Rapport PDF pour votre médecin</div>
+      <div class="premium-feature"><div class="premium-feature-icon">â¾ï¸</div>Scans illimitÃ©s chaque jour</div>
+      <div class="premium-feature"><div class="premium-feature-icon">â</div>Comparateur de produits</div>
+      <div class="premium-feature"><div class="premium-feature-icon">â </div>Alertes glucides personnalisÃ©es</div>
+      <div class="premium-feature"><div class="premium-feature-icon">â°</div>Rapport PDF pour votre mÃ©decin</div>
     </div>
     <div class="premium-prices">
       <div class="price-option" id="price-monthly" onclick="selectPrice('monthly')">
         <div class="price-option-label">Mensuel</div>
-        <div class="price-option-price">2,99€</div>
+        <div class="price-option-price">2,99â¬</div>
         <div style="font-size:0.7rem;color:var(--muted);">par mois</div>
       </div>
       <div class="price-option selected" id="price-yearly" onclick="selectPrice('yearly')">
         <div class="price-option-label">Annuel</div>
-        <div class="price-option-price">19,99€</div>
-        <div><span class="price-option-save">Économise 16€</span></div>
+        <div class="price-option-price">19,99â¬</div>
+        <div><span class="price-option-save">Ãconomise 16â¬</span></div>
       </div>
     </div>
-    <button class="btn-premium" onclick="activatePremium()">→ Démarrer l'essai gratuit 7 jours</button>
+    <button class="btn-premium" onclick="activatePremium()">â DÃ©marrer l'essai gratuit 7 jours</button>
     <button class="btn-close-premium" onclick="closePremiumPopup()">Non merci, continuer demain</button>
   </div>
 </div>
@@ -1894,8 +1894,8 @@ let scanHistory = JSON.parse(localStorage.getItem('diabetefood_history') || '[]'
 let scannerActive = false;
 let diabeteType = 1;
 
-// ─── FREEMIUM CONFIG ─────────────────────────────────────────────────────────
-// ⚙ SWITCH: Mets FREEMIUM_ENABLED = true pour activer la limite quand tu es prêt
+// âââ FREEMIUM CONFIG âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// â SWITCH: Mets FREEMIUM_ENABLED = true pour activer la limite quand tu es prÃªt
 const FREEMIUM_ENABLED = false;
 const FREE_SCANS_PER_DAY = 5;
 
@@ -1910,7 +1910,7 @@ function renderScanCounter() {
   if (!FREEMIUM_ENABLED || isPremium()) {
     if (isPremium()) {
       counter.className = 'scan-counter premium-mode';
-      counter.innerHTML = `<span style="font-size:1.1rem;">★</span><span class="scan-counter-text"><strong>Premium actif</strong> — Scans illimités</span>`;
+      counter.innerHTML = `<span style="font-size:1.1rem;">â</span><span class="scan-counter-text"><strong>Premium actif</strong> â Scans illimitÃ©s</span>`;
     } else {
       counter.style.display = 'none';
     }
@@ -1925,7 +1925,7 @@ function renderScanCounter() {
   counter.innerHTML = `
     <div class="scan-counter-dots">${dots}</div>
     <span class="scan-counter-text"><strong>${remaining}</strong> scan${remaining !== 1 ? 's' : ''} restant${remaining !== 1 ? 's' : ''} aujourd'hui</span>
-    <button class="btn-upgrade-small" onclick="showPremiumPopup()">★ Premium</button>
+    <button class="btn-upgrade-small" onclick="showPremiumPopup()">â Premium</button>
   `;
 }
 
@@ -1934,7 +1934,7 @@ function canScan() {
   return getScansToday() < FREE_SCANS_PER_DAY;
 }
 
-// ─── PREMIUM POPUP ────────────────────────────────────────────────────────────
+// âââ PREMIUM POPUP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showPremiumPopup() { return;
   document.getElementById('premium-overlay').classList.remove('hidden');
 }
@@ -1946,15 +1946,15 @@ function selectPrice(plan) {
   document.getElementById('price-yearly').classList.toggle('selected', plan === 'yearly');
 }
 function activatePremium() {
-  // En production: ici tu intègres Google Play Billing
+  // En production: ici tu intÃ¨gres Google Play Billing
   // Pour l'instant on simule l'activation
   localStorage.setItem('diabetefood_premium', 'true');
   closePremiumPopup();
   renderScanCounter();
-  showError('✅ Premium activé ! Profitez de tous les avantages.');
+  showError('â Premium activÃ© ! Profitez de tous les avantages.');
 }
 
-// ─── ALERTE GLUCIDES ──────────────────────────────────────────────────────────
+// âââ ALERTE GLUCIDES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let alertEnabled = localStorage.getItem('alert_enabled') === 'true';
 let alertThreshold = parseInt(localStorage.getItem('alert_threshold') || '30');
 
@@ -1979,7 +1979,7 @@ function checkGlucideAlert(glucides) {
   }
 }
 
-// ─── COMPARATEUR ─────────────────────────────────────────────────────────────
+// âââ COMPARATEUR âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let compareSlots = { 1: null, 2: null };
 let comparePending = null;
 
@@ -2001,16 +2001,16 @@ function renderCompareSlot(slot) {
     el.innerHTML = `<div class="compare-slot-empty"><span>Produit ${slot === 1 ? 'A' : 'B'}</span><button class="btn-add-compare" onclick="addToCompare(${slot})">+ Scanner</button></div>`;
     return;
   }
-  const colorMap = {'excellent':'green','acceptable':'orange','à éviter':'red'};
+  const colorMap = {'excellent':'green','acceptable':'orange','Ã  Ã©viter':'red'};
   const c = colorMap[d.verdict] || 'orange';
   el.innerHTML = `
     <div class="compare-product-name">${d.nom}</div>
     <div class="compare-product-score ${c}">${d.score}</div>
     <div class="compare-verdict-badge ${c}">${d.verdict}</div>
-    <div class="compare-mini-stat">● ${d.nutriments?.glucides || 'N/A'}</div>
-    <div class="compare-mini-stat">● ${d.nutriments?.sucres || 'N/A'}</div>
-    <div class="compare-mini-stat">● ${d.nutriments?.fibres || 'N/A'}</div>
-    <button class="btn-reset-compare" style="margin-top:6px;" onclick="compareSlots[${slot}]=null;renderCompareSlot(${slot});document.getElementById('compare-winner').style.display='none';">✕ Retirer</button>
+    <div class="compare-mini-stat">â ${d.nutriments?.glucides || 'N/A'}</div>
+    <div class="compare-mini-stat">â ${d.nutriments?.sucres || 'N/A'}</div>
+    <div class="compare-mini-stat">â ${d.nutriments?.fibres || 'N/A'}</div>
+    <button class="btn-reset-compare" style="margin-top:6px;" onclick="compareSlots[${slot}]=null;renderCompareSlot(${slot});document.getElementById('compare-winner').style.display='none';">â Retirer</button>
   `;
 }
 function updateCompareWinner() {
@@ -2018,15 +2018,15 @@ function updateCompareWinner() {
   if (!compareSlots[1] || !compareSlots[2]) { w.style.display = 'none'; return; }
   w.style.display = 'flex';
   if (compareSlots[1].score > compareSlots[2].score) {
-    w.innerHTML = `★ <strong>${compareSlots[1].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[1].score - compareSlots[2].score} pts)`;
+    w.innerHTML = `â <strong>${compareSlots[1].nom}</strong> est meilleur pour votre diabÃ¨te ! (+${compareSlots[1].score - compareSlots[2].score} pts)`;
   } else if (compareSlots[2].score > compareSlots[1].score) {
-    w.innerHTML = `★ <strong>${compareSlots[2].nom}</strong> est meilleur pour votre diabète ! (+${compareSlots[2].score - compareSlots[1].score} pts)`;
+    w.innerHTML = `â <strong>${compareSlots[2].nom}</strong> est meilleur pour votre diabÃ¨te ! (+${compareSlots[2].score - compareSlots[1].score} pts)`;
   } else {
-    w.innerHTML = `↔ Les deux produits ont le même score !`;
+    w.innerHTML = `â Les deux produits ont le mÃªme score !`;
   }
 }
 
-// ─── PDF RAPPORT ──────────────────────────────────────────────────────────────
+// âââ PDF RAPPORT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function updatePDFPreview() {
   const content = document.getElementById('pdf-stats-content');
   if (!content) return;
@@ -2036,15 +2036,15 @@ function updatePDFPreview() {
   }
   const avgScore = Math.round(scanHistory.reduce((a,b) => a + b.score, 0) / scanHistory.length);
   const excellent = scanHistory.filter(h => h.verdict === 'excellent').length;
-  const aEviter = scanHistory.filter(h => h.verdict === 'à éviter').length;
+  const aEviter = scanHistory.filter(h => h.verdict === 'Ã  Ã©viter').length;
   const acceptable = scanHistory.filter(h => h.verdict === 'acceptable').length;
   const scoreColor = avgScore >= 70 ? 'var(--good)' : avgScore >= 40 ? 'var(--warn)' : 'var(--danger)';
   content.innerHTML = `
-    <div class="pdf-stat-row"><span class="pdf-stat-label">Produits analysés</span><span class="pdf-stat-value">${scanHistory.length}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">Produits analysÃ©s</span><span class="pdf-stat-value">${scanHistory.length}</span></div>
     <div class="pdf-stat-row"><span class="pdf-stat-label">Score moyen</span><span class="pdf-stat-value" style="color:${scoreColor}">${avgScore}/100</span></div>
-    <div class="pdf-stat-row"><span class="pdf-stat-label">✅ Excellents</span><span class="pdf-stat-value" style="color:var(--good)">${excellent}</span></div>
-    <div class="pdf-stat-row"><span class="pdf-stat-label">⚠️ Acceptables</span><span class="pdf-stat-value" style="color:var(--warn)">${acceptable}</span></div>
-    <div class="pdf-stat-row"><span class="pdf-stat-label">✖ À éviter</span><span class="pdf-stat-value" style="color:var(--danger)">${aEviter}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">â Excellents</span><span class="pdf-stat-value" style="color:var(--good)">${excellent}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">â ï¸ Acceptables</span><span class="pdf-stat-value" style="color:var(--warn)">${acceptable}</span></div>
+    <div class="pdf-stat-row"><span class="pdf-stat-label">â Ã Ã©viter</span><span class="pdf-stat-value" style="color:var(--danger)">${aEviter}</span></div>
   `;
 }
 
@@ -2061,7 +2061,7 @@ function generatePDF() {
       <td>${h.time||''}</td>
     </tr>`).join('');
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-  <title>Rapport DiabeteFood — ${date}</title>
+  <title>Rapport DiabeteFood â ${date}</title>
   <style>
     body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a0a00;}
     h1{color:#ff6b00;font-size:1.4rem;} h2{font-size:1rem;color:#5c3010;margin-top:20px;}
@@ -2076,29 +2076,29 @@ function generatePDF() {
     .disclaimer{background:#f7f7f7;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:20px;font-size:0.78rem;color:#92400e;}
   </style></head><body>
   <div class="header">
-    <h1> DiabeteFood — Rapport nutritionnel</h1>
-    <p>Patient : Diabète Type ${diabeteType} &nbsp;|&nbsp; Généré le : ${date}</p>
+    <h1> DiabeteFood â Rapport nutritionnel</h1>
+    <p>Patient : DiabÃ¨te Type ${diabeteType} &nbsp;|&nbsp; GÃ©nÃ©rÃ© le : ${date}</p>
   </div>
   <div class="stats">
-    <div class="stat-box"><div class="stat-num">${scanHistory.length}</div><div class="stat-lbl">Produits analysés</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.length}</div><div class="stat-lbl">Produits analysÃ©s</div></div>
     <div class="stat-box"><div class="stat-num">${avgScore}/100</div><div class="stat-lbl">Score moyen</div></div>
-    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">✅ Excellents</div></div>
-    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">✖ À éviter</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">â Excellents</div></div>
+    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='Ã  Ã©viter').length}</div><div class="stat-lbl">â Ã Ã©viter</div></div>
   </div>
-  <h2>Détail des produits scannés</h2>
+  <h2>DÃ©tail des produits scannÃ©s</h2>
   <table><thead><tr><th>Produit</th><th>Score</th><th>Glucides</th><th>Sucres</th><th>Heure</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div class="disclaimer">⚕️ Ce rapport est généré par l'application DiabeteFood à titre informatif uniquement. Il ne remplace pas l'avis de votre médecin ou diabétologue. Veuillez consulter votre équipe médicale pour toute décision thérapeutique.</div>
+  <div class="disclaimer">âï¸ Ce rapport est gÃ©nÃ©rÃ© par l'application DiabeteFood Ã  titre informatif uniquement. Il ne remplace pas l'avis de votre mÃ©decin ou diabÃ©tologue. Veuillez consulter votre Ã©quipe mÃ©dicale pour toute dÃ©cision thÃ©rapeutique.</div>
   </body></html>`;
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `rapport-diabetefood-${date.replace(/\//g,'-')}.html`;
   a.click(); URL.revokeObjectURL(url);
-  showError('✅ Rapport généré ! Ouvrez le fichier et imprimez-le (Ctrl+P).');
+  showError('â Rapport gÃ©nÃ©rÃ© ! Ouvrez le fichier et imprimez-le (Ctrl+P).');
 }
 
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+// âââ NAVIGATION âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function switchPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -2115,11 +2115,11 @@ function selectType(t) {
   diabeteType = t;
   document.getElementById('tab-t1').classList.toggle('active', t === 1);
   document.getElementById('tab-t2').classList.toggle('active', t === 2);
-  document.getElementById('type-badge').textContent = `Diabète Type ${t}`;
+  document.getElementById('type-badge').textContent = `DiabÃ¨te Type ${t}`;
   document.getElementById('result-card').style.display = 'none';
 }
 
-// ─── BARCODE SCANNER ──────────────────────────────────────────────────────────
+// âââ BARCODE SCANNER ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function startScanner() {
   if (!canScan()) { showPremiumPopup(); return; }
   const container = document.getElementById('scanner-container');
@@ -2135,7 +2135,7 @@ function startScanner() {
     decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] },
     locate: true
   }, err => {
-    if (err) { showError("Impossible d'accéder à la caméra"); stopScanner(); return; }
+    if (err) { showError("Impossible d'accÃ©der Ã  la camÃ©ra"); stopScanner(); return; }
     Quagga.start(); scannerActive = true;
   });
   let lastCode = null, lastTime = 0;
@@ -2163,14 +2163,14 @@ function stopScanner() {
   document.body.classList.remove('scanner-active');
 }
 
-// ─── OPEN FOOD FACTS ──────────────────────────────────────────────────────────
+// âââ OPEN FOOD FACTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function fetchProductInfo(barcode) {
   const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
   try { const r = await fetch(url); const d = await r.json(); if (d.status === 1) return d.product; } catch(e) {}
   return null;
 }
 
-// ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
+// âââ MAIN ANALYSIS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 // === MASCOT ORANGE KAWAII ===
 function createMascotSVG(mood, size) {
   size = size || 100;
@@ -2278,7 +2278,7 @@ async function analyzeBarcode(barcode) {
     productImageUrl = product.image_front_url || product.image_url || null;
     const n = product.nutriments || {};
     nutrientsData = { glucides:n['carbohydrates_100g'], sucres:n['sugars_100g'], fibres:n['fiber_100g'], proteines:n['proteins_100g'], lipides:n['fat_100g'], calories:n['energy-kcal_100g'], sel:n['salt_100g'], graisses_sat:n['saturated-fat_100g'] };
-    // Données enrichies Open Food Facts
+    // DonnÃ©es enrichies Open Food Facts
     const ingredients = (product.ingredients_text_fr || product.ingredients_text || "").substring(0, 300);
     const nutriScore = product.nutriscore_grade || product.nutrition_grades || "inconnu";
     const novaGroup = product.nova_group || "inconnu";
@@ -2287,42 +2287,42 @@ async function analyzeBarcode(barcode) {
     const servingSize = product.serving_size || "";
     const additives = (product.additives_tags || []).slice(0, 5).map(a => a.replace('en:','')).join(', ') || "aucun";
 
-    nutritionText = `Produit: ${productName}\nCatégorie: ${category}\nNutri-Score: ${nutriScore.toUpperCase()}\nNOVA (transformation): ${novaGroup}/4\nTaille portion: ${servingSize || 'non indiquée'}\nAllergènes: ${allergens}\nAdditifs principaux: ${additives}\n\nIngrédients: ${ingredients || 'non disponibles'}\n\nValeurs pour 100g:\n` + Object.entries(nutrientsData).map(([k,v]) => v!=null?`- ${k}: ${v}g`:null).filter(Boolean).join('\n');
+    nutritionText = `Produit: ${productName}\nCatÃ©gorie: ${category}\nNutri-Score: ${nutriScore.toUpperCase()}\nNOVA (transformation): ${novaGroup}/4\nTaille portion: ${servingSize || 'non indiquÃ©e'}\nAllergÃ¨nes: ${allergens}\nAdditifs principaux: ${additives}\n\nIngrÃ©dients: ${ingredients || 'non disponibles'}\n\nValeurs pour 100g:\n` + Object.entries(nutrientsData).map(([k,v]) => v!=null?`- ${k}: ${v}g`:null).filter(Boolean).join('\n');
 
-    // Ajouter contexte historique si produits déjà scannés
+    // Ajouter contexte historique si produits dÃ©jÃ  scannÃ©s
     if (scanHistory.length > 0) {
       const recentCarbs = scanHistory.slice(0, 5).filter(h => h.nutriments?.glucides && h.nutriments.glucides !== 'N/A').map(h => `${h.nom}: ${h.nutriments.glucides}`);
       if (recentCarbs.length > 0) {
-        nutritionText += `\n\nProduits scannés récemment (pour contexte):\n${recentCarbs.join(', ')}`;
+        nutritionText += `\n\nProduits scannÃ©s rÃ©cemment (pour contexte):\n${recentCarbs.join(', ')}`;
       }
     }
   } else {
-    nutritionText = `Code-barres: ${barcode}\nAucune donnée nutritionnelle trouvée.`;
+    nutritionText = `Code-barres: ${barcode}\nAucune donnÃ©e nutritionnelle trouvÃ©e.`;
   }
 
-  const typeLabel = diabeteType === 1 ? "TYPE 1 (insulino-dépendant)" : "TYPE 2 (non insulino-dépendant)";
-  const typeAdviceContext = diabeteType === 1 ? "Pour le T1: focus sur le comptage des glucides pour le calcul d'insuline, index glycémique, risque d'hypoglycémie/hyperglycémie rapide." : "Pour le T2: focus sur la résistance à l'insuline, perte de poids, charge glycémique totale, fibres, éviter les sucres rapides, portions.";
+  const typeLabel = diabeteType === 1 ? "TYPE 1 (insulino-dÃ©pendant)" : "TYPE 2 (non insulino-dÃ©pendant)";
+  const typeAdviceContext = diabeteType === 1 ? "Pour le T1: focus sur le comptage des glucides pour le calcul d'insuline, index glycÃ©mique, risque d'hypoglycÃ©mie/hyperglycÃ©mie rapide." : "Pour le T2: focus sur la rÃ©sistance Ã  l'insuline, perte de poids, charge glycÃ©mique totale, fibres, Ã©viter les sucres rapides, portions.";
 
-  const prompt = `Tu es un diabétologue-nutritionniste expert. Tu parles à un patient diabétique de ${typeLabel} qui vient de scanner un produit au supermarché. Il a besoin de conseils CONCRETS et PRATIQUES.
+  const prompt = `Tu es un diabÃ©tologue-nutritionniste expert. Tu parles Ã  un patient diabÃ©tique de ${typeLabel} qui vient de scanner un produit au supermarchÃ©. Il a besoin de conseils CONCRETS et PRATIQUES.
 
 ${typeAdviceContext}
 
-DONNÉES DU PRODUIT:
+DONNÃES DU PRODUIT:
 ${nutritionText}
 
-RÈGLES POUR TES CONSEILS:
-- Sois SPÉCIFIQUE au produit (pas de conseils génériques comme "consultez votre médecin")
-- Mentionne des CHIFFRES concrets (glucides par portion, unités d'insuline estimées pour T1)
-- Donne un conseil sur le MOMENT de consommation (avant/après repas, à éviter le soir, etc.)
-- Si le produit est mauvais, propose une ALTERNATIVE concrète du même rayon
-- Analyse les INGRÉDIENTS si disponibles (sucres cachés, édulcorants, index glycémique réel vs apparent)
+RÃGLES POUR TES CONSEILS:
+- Sois SPÃCIFIQUE au produit (pas de conseils gÃ©nÃ©riques comme "consultez votre mÃ©decin")
+- Mentionne des CHIFFRES concrets (glucides par portion, unitÃ©s d'insuline estimÃ©es pour T1)
+- Donne un conseil sur le MOMENT de consommation (avant/aprÃ¨s repas, Ã  Ã©viter le soir, etc.)
+- Si le produit est mauvais, propose une ALTERNATIVE concrÃ¨te du mÃªme rayon
+- Analyse les INGRÃDIENTS si disponibles (sucres cachÃ©s, Ã©dulcorants, index glycÃ©mique rÃ©el vs apparent)
 - Prends en compte le Nutri-Score et le niveau de transformation NOVA
 
-Réponds UNIQUEMENT en JSON valide:
+RÃ©ponds UNIQUEMENT en JSON valide:
 {
   "nom": "nom court max 30 char",
-  "score": 0-100 (100 = parfait pour diabète T${diabeteType}),
-  "verdict": "excellent" | "acceptable" | "à éviter",
+  "score": 0-100 (100 = parfait pour diabÃ¨te T${diabeteType}),
+  "verdict": "excellent" | "acceptable" | "Ã  Ã©viter",
   "index_glycemique": 0-100 estimation,
   "nutriments": {
     "glucides": "<val>g" ou "N/A",
@@ -2331,12 +2331,12 @@ Réponds UNIQUEMENT en JSON valide:
     "calories": "<val> kcal" ou "N/A"
   },
   "conseils": [
-    "<conseil pratique sur CE produit spécifiquement, max 100 char>",
-    "<conseil sur la portion/timing pour un diabétique T${diabeteType}, max 100 char>",
-    "<conseil sur les ingrédients ou ce qu'il faut surveiller, max 100 char>"
+    "<conseil pratique sur CE produit spÃ©cifiquement, max 100 char>",
+    "<conseil sur la portion/timing pour un diabÃ©tique T${diabeteType}, max 100 char>",
+    "<conseil sur les ingrÃ©dients ou ce qu'il faut surveiller, max 100 char>"
   ],
-  "alternative": "<suggestion d'un produit similaire mais meilleur pour le diabète, max 80 char, ou null si le produit est déjà excellent>",
-  "portion_ideale": "<portion recommandée pour un diabétique, ex: '1 cuillère à soupe (15g)', ou null>"
+  "alternative": "<suggestion d'un produit similaire mais meilleur pour le diabÃ¨te, max 80 char, ou null si le produit est dÃ©jÃ  excellent>",
+  "portion_ideale": "<portion recommandÃ©e pour un diabÃ©tique, ex: '1 cuillÃ¨re Ã  soupe (15g)', ou null>"
 }`;
 
   try {
@@ -2346,7 +2346,7 @@ Réponds UNIQUEMENT en JSON valide:
       body:JSON.stringify({
         model:"claude-haiku-4-5-20251001",
         max_tokens:1024,
-        system:`Tu es un diabétologue-nutritionniste qui donne des conseils pratiques et personnalisés aux patients diabétiques de type ${diabeteType}. Tu analyses les produits alimentaires en profondeur (ingrédients, transformation, impact glycémique réel). Réponds uniquement en JSON valide, sans markdown ni backticks. Sois direct, concret et utile.`,
+        system:`Tu es un diabÃ©tologue-nutritionniste qui donne des conseils pratiques et personnalisÃ©s aux patients diabÃ©tiques de type ${diabeteType}. Tu analyses les produits alimentaires en profondeur (ingrÃ©dients, transformation, impact glycÃ©mique rÃ©el). RÃ©ponds uniquement en JSON valide, sans markdown ni backticks. Sois direct, concret et utile.`,
         messages:[{role:"user",content:prompt}]
       })
     });
@@ -2376,7 +2376,7 @@ Réponds UNIQUEMENT en JSON valide:
       renderCompareSlot(comparePending);
       updateCompareWinner();
       comparePending = null;
-      showError('✅ Produit ajouté au comparateur !');
+      showError('â Produit ajoutÃ© au comparateur !');
       setTimeout(() => switchPage('premium'), 1200);
     }
 
@@ -2388,19 +2388,19 @@ Réponds UNIQUEMENT en JSON valide:
 
   } catch(e) {
     document.getElementById('loading-card').style.display = 'none';
-    showError("Erreur d'analyse. Vérifiez votre connexion.");
+    showError("Erreur d'analyse. VÃ©rifiez votre connexion.");
     console.error(e);
   }
 }
 
-// ─── SHOW RESULT ─────────────────────────────────────────────────────────────
+// âââ SHOW RESULT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showResult(r) {
   const score = Math.min(100, Math.max(0, r.score));
   const gi = Math.min(100, Math.max(0, r.index_glycemique || 50));
-  const colorMap = {'excellent':'green','acceptable':'orange','à éviter':'red'};
-  const emojiMap = {'excellent':'✅','acceptable':'⚠️','à éviter':'✖'};
-  const labelMap = {'excellent':'Excellent','acceptable':'À consommer avec modération','à éviter':'À éviter'};
-  const fillColorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
+  const colorMap = {'excellent':'green','acceptable':'orange','Ã  Ã©viter':'red'};
+  const emojiMap = {'excellent':'â','acceptable':'â ï¸','Ã  Ã©viter':'â'};
+  const labelMap = {'excellent':'Excellent','acceptable':'Ã consommer avec modÃ©ration','Ã  Ã©viter':'Ã Ã©viter'};
+  const fillColorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','Ã  Ã©viter':'#ef4444'};
   const colorKey = colorMap[r.verdict] || 'orange';
   const fillColor = fillColorMap[r.verdict] || '#ffd166';
 
@@ -2411,14 +2411,14 @@ function showResult(r) {
     imgContainer.innerHTML = ''; imgContainer.appendChild(createMascotSVG(score >= 60 ? 'happy' : score >= 30 ? 'neutral' : 'worried', 80));
   }
 
-  document.getElementById('result-name').textContent = r.nom || 'Aliment analysé';
+  document.getElementById('result-name').textContent = r.nom || 'Aliment analysÃ©';
   const icon = document.getElementById('verdict-icon');
   icon.className = `verdict-icon ${colorKey}`;
-  icon.textContent = emojiMap[r.verdict] || '❓';
+  icon.textContent = emojiMap[r.verdict] || 'â';
   const badge = document.getElementById('verdict-badge');
   badge.className = `verdict-badge ${colorKey}`;
   badge.textContent = labelMap[r.verdict] || r.verdict;
-  document.getElementById('score-type-label').textContent = `Score diabète T${diabeteType}`;
+  document.getElementById('score-type-label').textContent = `Score diabÃ¨te T${diabeteType}`;
   document.getElementById('score-text').textContent = `${score}/100`;
   const fill = document.getElementById('score-fill');
   fill.style.transition = 'none';
@@ -2435,29 +2435,29 @@ function showResult(r) {
   setTimeout(() => { giMarker.style.left = `${gi}%`; }, 100);
 
   const nutrients = [
-    {icon:'●',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
-    {icon:'●',label:'Sucres',value:r.nutriments?.sucres||'N/A'},
-    {icon:'●',label:'Fibres',value:r.nutriments?.fibres||'N/A'},
-    {icon:'▲',label:'Calories',value:r.nutriments?.calories||'N/A'}
+    {icon:'â',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
+    {icon:'â',label:'Sucres',value:r.nutriments?.sucres||'N/A'},
+    {icon:'â',label:'Fibres',value:r.nutriments?.fibres||'N/A'},
+    {icon:'â²',label:'Calories',value:r.nutriments?.calories||'N/A'}
   ];
   document.getElementById('nutrients-grid').innerHTML = nutrients.map(n =>
     `<div class="nutrient-pill"><div class="nutrient-icon">${n.icon}</div><div class="nutrient-info"><div class="nutrient-value">${n.value}</div><div class="nutrient-name">${n.label}/100g</div></div></div>`
   ).join('');
 
-  document.getElementById('advice-title').textContent = `🩺 CONSEILS DIABÈTE T${diabeteType}`;
+  document.getElementById('advice-title').textContent = `ð©º CONSEILS DIABÃTE T${diabeteType}`;
     const dotColor = r.verdict === 'excellent' ? ' advice-dot-green' : r.verdict === '\u00e0 \u00e9viter' ? ' advice-dot-red' : '';
     let adviceHTML = (r.conseils||[]).map(a =>
       `<div class="advice-item"><div class="advice-dot${dotColor}"></div><span>${a}</span></div>`
     ).join('');
 
-    // Portion idéale
+    // Portion idÃ©ale
     if (r.portion_ideale) {
-      adviceHTML += `<div class="advice-extra"><span class="advice-extra-icon">⚖️</span><div><strong>Portion recommandée :</strong> ${r.portion_ideale}</div></div>`;
+      adviceHTML += `<div class="advice-extra"><span class="advice-extra-icon">âï¸</span><div><strong>Portion recommandÃ©e :</strong> ${r.portion_ideale}</div></div>`;
     }
 
     // Alternative
     if (r.alternative) {
-      adviceHTML += `<div class="advice-extra advice-alternative"><span class="advice-extra-icon">💡</span><div><strong>Alternative :</strong> ${r.alternative}</div></div>`;
+      adviceHTML += `<div class="advice-extra advice-alternative"><span class="advice-extra-icon">ð¡</span><div><strong>Alternative :</strong> ${r.alternative}</div></div>`;
     }
 
     document.getElementById('advice-list').innerHTML = adviceHTML;
@@ -2466,15 +2466,15 @@ function showResult(r) {
   document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// ─── HISTORY ─────────────────────────────────────────────────────────────────
+// âââ HISTORY âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderHistory() {
   const list = document.getElementById('history-list');
   if (scanHistory.length === 0) { list.innerHTML = '<div class="empty-history"><div class="empty-history-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-history-title">Aucun scan pour l\'instant</div><p class="empty-history-sub">Scannez votre premier produit pour commencer.</p><button class="scan-btn" onclick="switchPage(\'scan\')">Scanner un produit</button></div>'; return; }
-  const colorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
+  const colorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','Ã  Ã©viter':'#ef4444'};
   list.innerHTML = scanHistory.map((h, index) => {
     const thumb = h.imageUrl
-      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>■</div>'">`
-      : `<div class="history-thumb-placeholder">■</div>`;
+      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>â </div>'">`
+      : `<div class="history-thumb-placeholder">â </div>`;
     const escapedName = (h.nom || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<div class="history-item" onclick="showHistoryItem(${index})">
       ${thumb}
@@ -2485,7 +2485,7 @@ function renderHistory() {
   }).join('');
 }
 
-// ─── HISTORY ITEM CLICK ──────────────────────────────────────────────────────
+// âââ HISTORY ITEM CLICK ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showHistoryItem(index) {
   const item = scanHistory[index];
   if (!item) return;
@@ -2493,18 +2493,18 @@ function showHistoryItem(index) {
   showResult(item);
 }
 
-// ─── ERROR ────────────────────────────────────────────────────────────────────
+// âââ ERROR ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showError(msg) {
   const el = document.getElementById('error-toast');
-  el.textContent = msg.startsWith('✅') || msg.startsWith('★') ? msg : '⚠️ ' + msg;
+  el.textContent = msg.startsWith('â') || msg.startsWith('â') ? msg : 'â ï¸ ' + msg;
   el.style.display = 'block';
-  el.style.background = msg.startsWith('✅') ? '#dcfce7' : '#fee2e2';
-  el.style.borderColor = msg.startsWith('✅') ? '#86efac' : '#fca5a5';
-  el.style.color = msg.startsWith('✅') ? '#15803d' : '#dc2626';
+  el.style.background = msg.startsWith('â') ? '#dcfce7' : '#fee2e2';
+  el.style.borderColor = msg.startsWith('â') ? '#86efac' : '#fca5a5';
+  el.style.color = msg.startsWith('â') ? '#15803d' : '#dc2626';
   setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// âââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 document.getElementById('barcode-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') analyzeBarcode(e.target.value);
 });
