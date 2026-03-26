@@ -1562,6 +1562,8 @@
 
 const API_URL = "https://diabetefood-api.diabetefood.workers.dev";
 let scanHistory = JSON.parse(localStorage.getItem('diabetefood_history') || '[]');
+    const originalResultCardHTML = document.getElementById('result-card').innerHTML;
+    const originalResultCardHTML = document.getElementById('result-card').innerHTML;
 let scannerActive = false;
 let diabeteType = 1;
 
@@ -2074,6 +2076,7 @@ if ('serviceWorker' in navigator) {
         return;
       }
 
+      document.getElementById('result-card').innerHTML = originalResultCardHTML;
       document.getElementById('result-card').style.display = 'none';
       document.getElementById('loading-card').style.display = 'block';
 
