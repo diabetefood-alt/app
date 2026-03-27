@@ -362,7 +362,7 @@
   .type-selector {
     background: var(--surface);
     border-radius: var(--radius);
-    border: 2px solid #ffe5cc;
+    border: 1px solid rgba(0,0,0,0.06);
     padding: 13px 16px;
     margin-bottom: 14px;
     display: flex;
@@ -861,7 +861,8 @@
   }
   .nutrient-pill:active { transform: scale(0.97); }
   .nutrient-icon {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    flex-shrink: 0;
   }
   .nutrient-info {}
   .nutrient-value {
@@ -2591,13 +2592,13 @@ function showResult(r) {
   setTimeout(() => { giMarker.style.left = `${gi}%`; }, 100);
 
   const nutrients = [
-    {icon:'●',label:'Glucides',value:r.nutriments?.glucides||'N/A'},
-    {icon:'●',label:'Sucres',value:r.nutriments?.sucres||'N/A'},
-    {icon:'●',label:'Fibres',value:r.nutriments?.fibres||'N/A'},
-    {icon:'▲',label:'Calories',value:r.nutriments?.calories||'N/A'}
+    {icon:'🍞',label:'Glucides',value:r.nutriments?.glucides||'N/A',color:'#e67e22'},
+    {icon:'🍬',label:'Sucres',value:r.nutriments?.sucres||'N/A',color:'#e74c3c'},
+    {icon:'🥦',label:'Fibres',value:r.nutriments?.fibres||'N/A',color:'#27ae60'},
+    {icon:'🔥',label:'Calories',value:r.nutriments?.calories||'N/A',color:'#8e44ad'}
   ];
   document.getElementById('nutrients-grid').innerHTML = nutrients.map(n =>
-    `<div class="nutrient-pill"><div class="nutrient-icon">${n.icon}</div><div class="nutrient-info"><div class="nutrient-value">${n.value}</div><div class="nutrient-name">${n.label}/100g</div></div></div>`
+    `<div class="nutrient-pill" style="border-left:4px solid ${n.color}"><div class="nutrient-icon">${n.icon}</div><div class="nutrient-info"><div class="nutrient-value" style="color:${n.color}">${n.value}</div><div class="nutrient-name">${n.label}/100g</div></div></div>`
   ).join('');
 
   document.getElementById('advice-title').textContent = `🩺 CONSEILS DIABÈTE T${diabeteType}`;
