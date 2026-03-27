@@ -2228,6 +2228,8 @@ function generatePDF() {
 #page-premium.prem-unlocked .prem-chat { display:flex !important; }
 #page-premium.prem-unlocked .prem-input-bar { display:flex !important; }
 
+
+@keyframes btnShine{0%{left:-100%}60%{left:100%}100%{left:100%}}#prem-unlock-btn{position:relative;overflow:hidden}#prem-unlock-btn::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:btnShine 2.5s ease-in-out infinite;pointer-events:none}
 </style></head><body>
   <div class="header">
     <h1> DiabeteFood — Rapport nutritionnel</h1>
