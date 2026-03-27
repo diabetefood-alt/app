@@ -1754,7 +1754,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 #page-premium.active{margin:0 -14px !important;width:calc(100% + 28px) !important}#prem-landing{margin:0 !important;padding:30px 20px !important;width:100% !important;box-sizing:border-box !important;scrollbar-width:none;-ms-overflow-style:none}#prem-landing::-webkit-scrollbar{display:none}
 
 
-@keyframes btnShine{0%{left:-100%}60%{left:100%}100%{left:100%}}#prem-unlock-btn{position:relative;overflow:hidden}#prem-unlock-btn::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:btnShine 2.5s ease-in-out infinite;pointer-events:none}
+@keyframes btnShine{0%{left:-100%}50%{left:100%}100%{left:100%}}#prem-unlock-btn{position:relative;overflow:hidden}#prem-unlock-btn::after{content:'';position:absolute;top:-50%;left:-100%;width:60%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);transform:skewX(-20deg);animation:btnShine 3s ease-in-out infinite;pointer-events:none;z-index:1}#prem-unlock-btn span{position:relative;z-index:2}
 </style>
 </head>
 <body>
@@ -1957,7 +1957,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 <div style="font-size:60px;margin-bottom:8px;">🌿</div>
 <div style="font-size:14px;color:#888;margin-bottom:20px;">Votre assistant nutrition<br>adapté au diabète</div>
 </div>
-<button id="prem-unlock-btn" onclick="unlockPremium()" style="width:calc(100% - 32px);padding:18px 32px;background:linear-gradient(135deg,#ff6b00,#ff8c2e);color:white;border:none;border-radius:14px;font-size:18px;font-weight:700;font-family:'Nunito',system-ui,-apple-system,Arial,sans-serif;font-style:normal;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.35);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">Débloquer Premium</button>
+<button id="prem-unlock-btn" onclick="unlockPremium()" style="width:calc(100% - 32px);padding:18px 32px;background:linear-gradient(135deg,#ff6b00,#ff8c2e);color:white;border:none;border-radius:14px;font-size:18px;font-weight:700;font-family:'Nunito',system-ui,-apple-system,Arial,sans-serif;font-style:normal;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.35);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><span>Débloquer Premium</span></button>
 <div style="margin-top:16px;font-size:12px;color:#aaa;text-align:center;">Gratuit • Sans engagement</div>
 </div>
 
