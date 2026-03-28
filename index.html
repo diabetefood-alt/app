@@ -254,6 +254,69 @@
         a.click();
       }
     }
+    function downloadPremiumPDF(){
+      if(premDayTotals.meals.length===0){alert('Aucun repas enregistr\u00e9 aujourd\'hui');return;}
+      var jsPDF=window.jspdf.jsPDF;
+      var doc=new jsPDF();
+      var diabType=localStorage.getItem('diabeteType')||'1';
+      var today=new Date();
+      var dateStr=today.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      doc.setFillColor(255,247,237);doc.rect(0,0,210,45,'F');
+      doc.setFontSize(22);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
+      doc.text('DiabeteFood',105,20,{align:'center'});
+      doc.setFontSize(10);doc.setTextColor(130,130,130);doc.setFont('helvetica','normal');
+      doc.text('Rapport Nutritionnel - Diab\u00e8te Type '+diabType,105,30,{align:'center'});
+      doc.text(dateStr,105,37,{align:'center'});
+      doc.setDrawColor(255,107,0);doc.setLineWidth(0.5);doc.line(20,47,190,47);
+      var y=57;
+      if(premDayTotals.meals&&premDayTotals.meals.length>0){
+        doc.setFontSize(14);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
+        doc.text('Repas du jour',20,y);y+=8;
+        var td=premDayTotals.meals.map(function(m){return[
+          m.name||m.produit||'Repas',
+          (m.glucides!=null?m.glucides:'N/A')+'g',
+          (m.sucres!=null?m.sucres:'N/A')+'g',
+          (m.fibres!=null?m.fibres:'N/A')+'g',
+          (m.calories!=null?m.calories:'N/A')+' kcal'
+        ];});
+        doc.autoTable({startY:y,
+          head:[['Aliment','Glucides','Sucres','Fibres','Calories']],
+          body:td,theme:'striped',
+          headStyles:{fillColor:[255,107,0],textColor:[255,255,255],fontStyle:'bold'},
+          styles:{fontSize:9,cellPadding:4},margin:{left:20,right:20}});
+        y=doc.lastAutoTable.finalY+10;
+        doc.setFontSize(11);doc.setTextColor(51,51,51);doc.setFont('helvetica','bold');
+        doc.text('Totaux du jour:',20,y);y+=7;
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        doc.text('Calories: '+(premDayTotals.calories||0)+' kcal',25,y);
+        doc.text('Glucides: '+(premDayTotals.glucides||0)+'g',90,y);y+=6;
+        doc.text('Prot\u00e9ines: '+(premDayTotals.proteines||0)+'g',25,y);
+        doc.text('Lipides: '+(premDayTotals.lipides||0)+'g',90,y);y+=12;
+      }
+      doc.setDrawColor(255,107,0);doc.setLineWidth(0.3);doc.line(20,y,190,y);y+=10;
+      doc.setFontSize(14);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
+      doc.text('Analyse IA Nutritionniste',20,y);y+=8;
+      var dateKey=today.toDateString();
+      var msgs=JSON.parse(localStorage.getItem('prem_messages_'+dateKey)||'[]');
+      var aiMsgs=msgs.filter(function(m){return m.role==='assistant'||m.sender==='ai';});
+      doc.setFontSize(9);doc.setTextColor(51,51,51);doc.setFont('helvetica','normal');
+      if(aiMsgs.length>0){
+        aiMsgs.forEach(function(msg){
+          var txt=msg.content||msg.text||'';
+          var lines=doc.splitTextToSize(txt,160);
+          if(y+lines.length*5>270){doc.addPage();y=20;}
+          doc.setFillColor(245,245,240);doc.roundedRect(18,y-4,174,lines.length*5+6,3,3,'F');
+          doc.text(lines,22,y+2);y+=lines.length*5+12;
+        });
+      }else{doc.text('Aucune analyse IA disponible pour cette journ\u00e9e.',20,y);}
+      var pc=doc.getNumberOfPages();
+      for(var i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(130,130,130);
+        doc.text('DiabeteFood - Rapport g\u00e9n\u00e9r\u00e9 le '+today.toLocaleDateString('fr-FR'),105,290,{align:'center'});
+        doc.text('Ce rapport est fourni \u00e0 titre informatif. Consultez votre diab\u00e9tologue.',105,295,{align:'center'});
+      }
+      doc.save('DiabeteFood_Rapport_'+today.toISOString().split('T')[0]+'.pdf');
+    }
+
 
     // Init premium when tab is shown
     const origSwitchPage = typeof switchPage === 'function' ? switchPage : null;
@@ -1771,6 +1834,8 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 .prem-suggestions{gap:8px!important;margin-top:18px!important}
 .prem-suggestion:active{transform:scale(0.96)!important}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -1976,7 +2041,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 <div style="margin-top:16px;font-size:12px;color:#aaa;text-align:center;">Gratuit • Sans engagement</div>
 </div>
 
-<div class="prem-header"><div style="width:28px;height:28px;"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="28" height="28"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg></div><div class="prem-header-title">Mon Journal</div><span class="prem-header-badge">PREMIUM</span><div style="flex:1"></div><button class="prem-report-btn" onclick="generatePremiumReport()" style="margin:0;padding:6px 12px;font-size:0.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Rapport</button></div><div class="prem-calendar" id="prem-calendar"></div><div class="prem-summary" id="prem-summary"><div class="prem-stat"><div class="prem-stat-value" id="prem-carbs">0g</div><div class="prem-stat-label">Glucides</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:var(--accent)"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-cal">0</div><div class="prem-stat-label">Calories</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#43a047"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-ig">--</div><div class="prem-stat-label">IG moyen</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#2196f3"></div></div></div></div><div class="prem-chat" id="prem-chat"><div class="prem-welcome"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="80" height="80"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg><div class="prem-welcome-title">Dr. DiabeteFood</div><div class="prem-welcome-text">Bonjour ! Je suis votre assistant nutrition.<br>Dites-moi ce que vous avez mangé ou envoyez une photo de votre repas.</div><div class="prem-suggestions"><div class="prem-suggestion" onclick="premSendSuggestion(this)">Petit-déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Dîner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Collation</div></div></div></div><div class="prem-input-bar"><input type="file" id="prem-photo-input" accept="image/*" capture="environment" style="display:none" onchange="premHandlePhoto(event)"><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Caméra"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button><input class="prem-input" id="prem-input-text" type="text" placeholder="Qu'avez-vous mangé ?" onkeydown="if(event.key==='Enter')premSendMessage()"><button class="prem-input-btn prem-send-btn" onclick="premSendMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
+<div class="prem-header"><div style="width:28px;height:28px;"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="28" height="28"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg></div><div class="prem-header-title">Mon Journal</div><span class="prem-header-badge">PREMIUM</span><div style="flex:1"></div><button class="prem-report-btn" onclick="generatePremiumReport()" style="margin:0;padding:6px 12px;font-size:0.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Rapport</button><button class="prem-report-btn" onclick="downloadPremiumPDF()" style="margin:0 0 0 6px;padding:6px 12px;font-size:0.75rem;background:linear-gradient(135deg,#e74c3c,#c0392b);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="8 16 12 20 16 16"/></svg> PDF</button></div><div class="prem-calendar" id="prem-calendar"></div><div class="prem-summary" id="prem-summary"><div class="prem-stat"><div class="prem-stat-value" id="prem-carbs">0g</div><div class="prem-stat-label">Glucides</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:var(--accent)"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-cal">0</div><div class="prem-stat-label">Calories</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#43a047"></div></div></div><div class="prem-stat"><div class="prem-stat-value" id="prem-ig">--</div><div class="prem-stat-label">IG moyen</div><div class="prem-stat-bar"><div class="prem-stat-fill" style="width:0%;background:#2196f3"></div></div></div></div><div class="prem-chat" id="prem-chat"><div class="prem-welcome"><svg class="prem-mascot-doc" viewBox="0 0 120 120" width="80" height="80"><circle cx="60" cy="62" r="45" fill="#F5923A"/><ellipse cx="45" cy="42" rx="15" ry="12" fill="white" opacity="0.2" transform="rotate(-20,45,42)"/><circle cx="60" cy="18" r="10" fill="white" stroke="#ccc" stroke-width="1.5"/><circle cx="60" cy="18" r="6" fill="#e8e8e8"/><circle cx="60" cy="18" r="3" fill="white"/><rect x="56" y="24" width="8" height="6" rx="2" fill="#ccc"/><path d="M30 75 Q30 95 45 100 Q55 103 55 90" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="55" cy="88" r="4" fill="#333"/><circle cx="30" cy="73" r="3" fill="#555"/><path d="M35 85 Q60 80 85 85 Q88 95 85 107 Q60 112 35 107 Q32 95 35 85Z" fill="white" opacity="0.85"/><line x1="60" y1="82" x2="60" y2="107" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="44" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="76" cy="55" rx="7" ry="8" fill="white"/><ellipse cx="46" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><ellipse cx="78" cy="55" rx="4.5" ry="5.5" fill="#2D1B0E"/><circle cx="47" cy="52" r="2" fill="white"/><circle cx="79" cy="52" r="2" fill="white"/><path d="M42 70Q60 84 78 70" stroke="#2D1B0E" stroke-width="2.5" fill="#C0392B" stroke-linecap="round"/><ellipse cx="72" cy="18" rx="12" ry="7" fill="#6AAF4B" transform="rotate(25,72,18)"/><line x1="62" y1="22" x2="72" y2="15" stroke="#5a9e3b" stroke-width="1.5"/></svg><div class="prem-welcome-title">Dr. DiabeteFood</div><div class="prem-welcome-text">Bonjour ! Je suis votre assistant nutrition.<br>Dites-moi ce que vous avez mangé ou envoyez une photo de votre repas.</div><div class="prem-suggestions"><div class="prem-suggestion" onclick="premSendSuggestion(this)">Petit-déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Déjeuner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Dîner</div><div class="prem-suggestion" onclick="premSendSuggestion(this)">Collation</div></div></div></div><div class="prem-input-bar"><input type="file" id="prem-photo-input" accept="image/*" capture="environment" style="display:none" onchange="premHandlePhoto(event)"><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button><button class="prem-input-btn" onclick="document.getElementById('prem-photo-input').click()" title="Caméra"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button><input class="prem-input" id="prem-input-text" type="text" placeholder="Qu'avez-vous mangé ?" onkeydown="if(event.key==='Enter')premSendMessage()"><button class="prem-input-btn prem-send-btn" onclick="premSendMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
 </main>
 
 <!-- NAV -->
