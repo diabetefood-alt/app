@@ -1854,6 +1854,36 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 .prem-welcome-text{color:#777!important;max-width:280px!important;margin:8px auto 0!important}
 .prem-suggestions{gap:8px!important;margin-top:18px!important}
 .prem-suggestion:active{transform:scale(0.96)!important}
+
+.glyc-section{padding:12px 16px;margin:4px 16px 8px;background:var(--surface2);border-radius:16px}
+  .glyc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .glyc-title{font-size:0.95rem;font-weight:700;color:var(--text)}
+  .glyc-unit-toggle{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid #ddd}
+  .glyc-unit-btn{padding:3px 10px;font-size:0.65rem;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;background:#f5f5f5;color:#999}
+  .glyc-unit-btn.active{background:var(--accent);color:#fff}
+  .glyc-slider-wrap{position:relative;margin:8px 0 4px}
+  .glyc-slider-bg{height:8px;border-radius:4px;background:linear-gradient(90deg,#e74c3c 0%,#e74c3c 8%,#f39c12 8%,#f39c12 18%,#43a047 18%,#43a047 55%,#f39c12 55%,#f39c12 72%,#e74c3c 72%,#e74c3c 100%)}
+  .glyc-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;position:absolute;top:0;left:0;background:transparent;margin:0;cursor:pointer}
+  .glyc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,0.2);margin-top:-7px;cursor:pointer}
+  .glyc-value-display{text-align:center;margin:8px 0}
+  .glyc-value-num{font-size:2rem;font-weight:800}
+  .glyc-value-unit{font-size:0.75rem;color:#999;margin-left:4px}
+  .glyc-value-status{font-size:0.7rem;font-weight:600;margin-top:2px}
+  .glyc-moment{display:flex;gap:8px;justify-content:center;margin:8px 0}
+  .glyc-moment-btn{padding:6px 16px;border-radius:20px;border:1.5px solid #ddd;font-size:0.72rem;font-weight:600;cursor:pointer;background:#fff;color:#666;transition:all 0.2s}
+  .glyc-moment-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.1);color:var(--accent)}
+  .glyc-add-btn{width:100%;padding:10px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#e65c00);color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;margin:8px 0 4px}
+  .glyc-chart-wrap{margin-top:12px;padding-top:10px;border-top:1px solid #eee}
+  .glyc-chart-title{font-size:0.75rem;font-weight:600;color:#999;margin-bottom:6px}
+  .glyc-chart{width:100%;height:130px;border-radius:10px;background:#fafafa}
+  .glyc-history{margin-top:8px;max-height:120px;overflow-y:auto}
+  .glyc-entry{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:8px;margin:3px 0;font-size:0.72rem}
+  .glyc-entry:nth-child(odd){background:#f9f9f9}
+  .glyc-entry-time{color:#999;font-weight:500}
+  .glyc-entry-val{font-weight:700}
+  .glyc-entry-moment{font-size:0.65rem;color:#999;background:#f0f0f0;padding:2px 8px;border-radius:10px}
+  .glyc-entry-del{border:none;background:none;color:#ccc;cursor:pointer;font-size:0.8rem;padding:2px 4px}
+  .glyc-no-data{text-align:center;color:#ccc;font-size:0.75rem;padding:
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -2332,35 +2362,7 @@ function generatePDF() {
 #page-premium.prem-unlocked .prem-input-bar { display:flex !important; }
 
 
-  .glyc-section{padding:12px 16px;margin:4px 16px 8px;background:var(--surface2);border-radius:16px}
-  .glyc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  .glyc-title{font-size:0.95rem;font-weight:700;color:var(--text)}
-  .glyc-unit-toggle{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid #ddd}
-  .glyc-unit-btn{padding:3px 10px;font-size:0.65rem;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;background:#f5f5f5;color:#999}
-  .glyc-unit-btn.active{background:var(--accent);color:#fff}
-  .glyc-slider-wrap{position:relative;margin:8px 0 4px}
-  .glyc-slider-bg{height:8px;border-radius:4px;background:linear-gradient(90deg,#e74c3c 0%,#e74c3c 8%,#f39c12 8%,#f39c12 18%,#43a047 18%,#43a047 55%,#f39c12 55%,#f39c12 72%,#e74c3c 72%,#e74c3c 100%)}
-  .glyc-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;position:absolute;top:0;left:0;background:transparent;margin:0;cursor:pointer}
-  .glyc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,0.2);margin-top:-7px;cursor:pointer}
-  .glyc-value-display{text-align:center;margin:8px 0}
-  .glyc-value-num{font-size:2rem;font-weight:800}
-  .glyc-value-unit{font-size:0.75rem;color:#999;margin-left:4px}
-  .glyc-value-status{font-size:0.7rem;font-weight:600;margin-top:2px}
-  .glyc-moment{display:flex;gap:8px;justify-content:center;margin:8px 0}
-  .glyc-moment-btn{padding:6px 16px;border-radius:20px;border:1.5px solid #ddd;font-size:0.72rem;font-weight:600;cursor:pointer;background:#fff;color:#666;transition:all 0.2s}
-  .glyc-moment-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.1);color:var(--accent)}
-  .glyc-add-btn{width:100%;padding:10px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#e65c00);color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;margin:8px 0 4px}
-  .glyc-chart-wrap{margin-top:12px;padding-top:10px;border-top:1px solid #eee}
-  .glyc-chart-title{font-size:0.75rem;font-weight:600;color:#999;margin-bottom:6px}
-  .glyc-chart{width:100%;height:130px;border-radius:10px;background:#fafafa}
-  .glyc-history{margin-top:8px;max-height:120px;overflow-y:auto}
-  .glyc-entry{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:8px;margin:3px 0;font-size:0.72rem}
-  .glyc-entry:nth-child(odd){background:#f9f9f9}
-  .glyc-entry-time{color:#999;font-weight:500}
-  .glyc-entry-val{font-weight:700}
-  .glyc-entry-moment{font-size:0.65rem;color:#999;background:#f0f0f0;padding:2px 8px;border-radius:10px}
-  .glyc-entry-del{border:none;background:none;color:#ccc;cursor:pointer;font-size:0.8rem;padding:2px 4px}
-  .glyc-no-data{text-align:center;color:#ccc;font-size:0.75rem;padding:20px 0}
+ 20px 0}
 </style></head><body>
   <div class="header">
     <h1> DiabeteFood — Rapport nutritionnel</h1>
