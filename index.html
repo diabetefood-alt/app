@@ -1618,11 +1618,11 @@
   .prem-msg { display:flex; gap:8px; animation:fadeInUp 0.3s ease; }
   .prem-msg-user { flex-direction:row-reverse; }
   .prem-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .prem-avatar-ai { background:linear-gradient(135deg,#fff3e6,#ffe0c0); border:2px solid var(--accent); }
+  .prem-avatar-ai { background:linear-gradient(135deg,#fff7ee,#ffe8d0); border:2px solid #ff8c2e; box-shadow:0 2px 8px rgba(255,107,0,0.15); }
   .prem-avatar-user { background:var(--surface2); }
-  .prem-bubble { max-width:78%; border-radius:16px; padding:10px 14px; font-size:0.88rem; line-height:1.5; }
-  .prem-bubble-ai { background:white; border:1px solid #f0f0f0; border-radius:16px 16px 16px 4px; }
-  .prem-bubble-user { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border-radius:16px 16px 4px 16px; }
+  .prem-bubble { max-width:82%; border-radius:18px; padding:12px 16px; font-size:0.88rem; line-height:1.6; }
+  .prem-bubble-ai { background:white; border:1px solid rgba(0,0,0,0.06); border-radius:20px 20px 20px 6px; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+  .prem-bubble-user { background:linear-gradient(135deg,#ff6b00,#ff9a3c); color:white; border-radius:20px 20px 6px 20px; box-shadow:0 2px 8px rgba(255,107,0,0.25); }
 
   .prem-meal-card { background:#fafafa; border-radius:12px; padding:10px; margin-top:8px; }
   .prem-meal-item { display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; }
@@ -1639,22 +1639,22 @@
   .prem-analyzing { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:0.82rem; color:var(--accent); font-weight:600; }
   .prem-analyzing-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 1s infinite; }
 
-  .prem-input-bar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-top:1px solid #f0f0f0; background:white; }
-  .prem-input { flex:1; border:1px solid #e0e0e0; border-radius:24px; padding:10px 16px; font-size:0.88rem; font-family:inherit; outline:none; transition:border-color 0.2s; }
-  .prem-input:focus { border-color:var(--accent); }
+  .prem-input-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid rgba(0,0,0,0.06); background:white; }
+  .prem-input { flex:1; border:1.5px solid #ede5dc; border-radius:24px; padding:11px 18px; font-size:0.88rem; font-family:inherit; outline:none; transition:border-color 0.2s,box-shadow 0.2s; background:#fafafa; }
+  .prem-input:focus { border-color:#ff8c2e; box-shadow:0 0 0 3px rgba(255,107,0,0.1); background:white; }
   .prem-input-btn { width:36px; height:36px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; background:none; }
   .prem-input-btn:hover { background:var(--surface2); }
-  .prem-send-btn { background:var(--accent) !important; color:white; }
+  .prem-send-btn { background:linear-gradient(135deg,#ff6b00,#ff9a3c) !important; color:white; box-shadow:0 2px 8px rgba(255,107,0,0.3); }
   .prem-send-btn:hover { background:var(--accent2) !important; }
 
   .prem-report-btn { display:flex; align-items:center; justify-content:center; gap:6px; margin:8px 16px; padding:12px; background:linear-gradient(135deg,#ff6b00,#ff9a3c); color:white; border:none; border-radius:14px; font-weight:700; font-size:0.88rem; font-family:inherit; cursor:pointer; }
 
-  .prem-welcome { text-align:center; padding:30px 20px; }
+  .prem-welcome { text-align:center; padding:40px 24px; }
   .prem-mascot-doc { width:80px; height:80px; margin:0 auto 12px; }
   .prem-welcome-title { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.05rem; color:var(--text); }
   .prem-welcome-text { font-size:0.82rem; color:#888; margin-top:6px; line-height:1.5; }
   .prem-suggestions { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:14px; }
-  .prem-suggestion { background:white; border:1px solid #ffe0c0; border-radius:20px; padding:6px 14px; font-size:0.78rem; color:var(--accent); font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .prem-suggestion { background:white; border:1.5px solid rgba(255,107,0,0.12); border-radius:20px; padding:8px 16px; font-size:0.78rem; color:var(--accent); font-weight:600; cursor:pointer; transition:all 0.2s; }
   .prem-suggestion:hover { background:#fff5eb; }
 
   #page-premium.active { display:flex; flex-direction:column; height:calc(100vh - 70px); }
@@ -1740,10 +1740,10 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 
 /* END PREMIUM POLISH */
   
-.prem-land-feat { display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:20px; margin:0 16px 12px 16px; background:rgba(255,255,255,0.75); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1.5px solid rgba(255,107,0,0.1); border-radius:16px; box-shadow:0 2px 8px rgba(26,10,0,0.04),0 8px 24px rgba(255,107,0,0.06); }
-.prem-land-icon { font-size:32px; flex-shrink:0; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(255,107,0,0.08); border-radius:12px; }
-.prem-land-title { font-size:15px; font-weight:700; color:#1a0a00; margin-bottom:4px; text-align:center; }
-.prem-land-desc { font-size:13px; color:#666; line-height:1.4; text-align:center; }
+.prem-land-feat { display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:22px 18px; margin:0 16px 14px 16px; background:white; border:1px solid rgba(0,0,0,0.06); border-radius:20px; box-shadow:0 2px 12px rgba(0,0,0,0.04),0 8px 30px rgba(255,107,0,0.07); transition:transform 0.2s; }
+.prem-land-icon { font-size:28px; flex-shrink:0; width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#fff3e6,#ffe8d0); border-radius:16px; border:1px solid rgba(255,107,0,0.1); }
+.prem-land-title { font-size:15px; font-weight:800; color:#1a0a00; margin-bottom:2px; text-align:center; letter-spacing:-0.2px; }
+.prem-land-desc { font-size:12.5px; color:#888; line-height:1.5; text-align:center; }
 #prem-landing { animation:pageIn 0.3s ease; }
 #page-premium #prem-landing { display:block; }
 #page-premium .prem-header, #page-premium .prem-calendar, #page-premium .prem-summary, #page-premium .prem-chat, #page-premium .prem-input-bar { display:none !important; }
@@ -1756,6 +1756,20 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 
 
 @keyframes btnShine{0%{left:-100%}50%{left:100%}100%{left:100%}}#prem-unlock-btn{position:relative;overflow:hidden}#prem-unlock-btn::after{content:'';position:absolute;top:-50%;left:-100%;width:60%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);transform:skewX(-20deg);animation:btnShine 3s ease-in-out infinite;pointer-events:none;z-index:1}#prem-unlock-btn span{position:relative;z-index:2}
+
+/* PREMIUM REDESIGN v2 */
+.prem-land-feat:active{transform:scale(0.97)}
+#prem-landing>div:first-child{padding:32px 24px 20px;background:linear-gradient(180deg,rgba(255,107,0,0.06) 0%,transparent 100%)}
+.prem-header{background:white!important;border-bottom:1px solid rgba(0,0,0,0.06)!important;box-shadow:0 1px 4px rgba(0,0,0,0.03)!important}
+.prem-day.active{background:linear-gradient(135deg,#ff6b00,#ff9a3c)!important;box-shadow:0 3px 12px rgba(255,107,0,0.3)!important}
+.prem-chat{background:linear-gradient(180deg,#faf8f5 0%,#fff 50%,#faf8f5 100%)!important}
+.prem-meal-card{background:#fafaf8!important;border-radius:16px!important;border:1px solid rgba(0,0,0,0.04)!important;padding:14px!important}
+.prem-report-btn{border-radius:16px!important;box-shadow:0 2px 8px rgba(255,107,0,0.2)!important}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.prem-msg{animation:fadeInUp 0.3s ease!important}
+.prem-welcome-text{color:#777!important;max-width:280px!important;margin:8px auto 0!important}
+.prem-suggestions{gap:8px!important;margin-top:18px!important}
+.prem-suggestion:active{transform:scale(0.96)!important}
 </style>
 </head>
 <body>
@@ -1931,7 +1945,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
   <!-- PAGE PREMIUM -->
   <div class="page" id="page-premium"><div id="prem-landing" style="display:flex;flex-direction:column;align-items:center;overflow-y:auto;min-height:calc(100vh - 70px);overflow-y:auto;">
 <div style="text-align:center;margin-bottom:24px;">
-<div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#ff6b00;margin-bottom:8px;">ACCÈS PREMIUM</div>
+<div style="font-size:11px;font-weight:800;letter-spacing:3px;color:#ff6b00;margin-bottom:10px;background:linear-gradient(135deg,#fff3e6,#ffe8d0);padding:6px 16px;border-radius:20px;display:inline-block;">ACCÈS PREMIUM</div>
 <div style="font-size:28px;font-weight:800;color:#1a0a00;line-height:1.2;">Débloquez toute<br>la puissance IA</div>
 </div>
 <div class="prem-land-feat">
