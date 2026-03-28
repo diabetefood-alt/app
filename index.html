@@ -256,8 +256,7 @@
     }
     function downloadPremiumPDF(){
       if(premDayTotals.meals.length===0){alert('Aucun repas enregistr\u00e9 aujourd\'hui');return;}
-      var jsPDF=window.jspdf.jsPDF;
-      var doc=new jsPDF();
+      var jsPDF=window.jspdf.jsPDF;var doc=new jsPDF();
       var diabType=localStorage.getItem('diabeteType')||'1';
       var today=new Date();
       var dateStr=today.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -269,46 +268,65 @@
       doc.text(dateStr,105,37,{align:'center'});
       doc.setDrawColor(255,107,0);doc.setLineWidth(0.5);doc.line(20,47,190,47);
       var y=57;
-      if(premDayTotals.meals&&premDayTotals.meals.length>0){
-        doc.setFontSize(14);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
-        doc.text('Repas du jour',20,y);y+=8;
-        var td=premDayTotals.meals.map(function(m){return[
-          m.name||m.produit||'Repas',
-          (m.glucides!=null?m.glucides:'N/A')+'g',
-          (m.sucres!=null?m.sucres:'N/A')+'g',
-          (m.fibres!=null?m.fibres:'N/A')+'g',
-          (m.calories!=null?m.calories:'N/A')+' kcal'
-        ];});
-        doc.autoTable({startY:y,
-          head:[['Aliment','Glucides','Sucres','Fibres','Calories']],
-          body:td,theme:'striped',
-          headStyles:{fillColor:[255,107,0],textColor:[255,255,255],fontStyle:'bold'},
-          styles:{fontSize:9,cellPadding:4},margin:{left:20,right:20}});
-        y=doc.lastAutoTable.finalY+10;
-        doc.setFontSize(11);doc.setTextColor(51,51,51);doc.setFont('helvetica','bold');
-        doc.text('Totaux du jour:',20,y);y+=7;
-        doc.setFont('helvetica','normal');doc.setFontSize(10);
-        doc.text('Calories: '+(premDayTotals.calories||0)+' kcal',25,y);
-        doc.text('Glucides: '+(premDayTotals.glucides||0)+'g',90,y);y+=6;
-        doc.text('Prot\u00e9ines: '+(premDayTotals.proteines||0)+'g',25,y);
-        doc.text('Lipides: '+(premDayTotals.lipides||0)+'g',90,y);y+=12;
-      }
+      doc.setFontSize(14);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
+      doc.text('Repas du jour',20,y);y+=8;
+      var td=[];premDayTotals.meals.forEach(function(meal){
+        if(meal.aliments&&meal.aliments.length>0){meal.aliments.forEach(function(a){
+          td.push([a.nom||'Aliment',(a.glucides!=null?a.glucides:'N/A')+'g',(a.sucres!=null?a.sucres:'N/A')+'g',(a.fibres!=null?a.fibres:'N/A')+'g',(a.calories!=null?a.calories:'N/A')+' kcal',(a.ig!=null?a.ig:'N/A')]);
+        });}
+      });
+      if(td.length>0){doc.autoTable({startY:y,
+        head:[['Aliment','Glucides','Sucres','Fibres','Calories','IG']],
+        body:td,theme:'striped',
+        headStyles:{fillColor:[255,107,0],textColor:[255,255,255],fontStyle:'bold'},
+        styles:{fontSize:9,cellPadding:4},margin:{left:20,right:20}});
+        y=doc.lastAutoTable.finalY+10;}
+      doc.setFontSize(11);doc.setTextColor(51,51,51);doc.setFont('helvetica','bold');
+      doc.text('Totaux du jour:',20,y);y+=7;
+      doc.setFont('helvetica','normal');doc.setFontSize(10);
+      doc.text('Calories: '+(premDayTotals.calories||0)+' kcal',25,y);
+      doc.text('Glucides: '+(premDayTotals.glucides||0)+'g',90,y);y+=6;
+      doc.text('Prot\u00e9ines: '+(premDayTotals.proteines||0)+'g',25,y);
+      doc.text('Lipides: '+(premDayTotals.lipides||0)+'g',90,y);
+      if(premDayTotals.ig_moyen)doc.text('IG moyen: '+premDayTotals.ig_moyen,150,y);
+      y+=12;
       doc.setDrawColor(255,107,0);doc.setLineWidth(0.3);doc.line(20,y,190,y);y+=10;
       doc.setFontSize(14);doc.setTextColor(255,107,0);doc.setFont('helvetica','bold');
       doc.text('Analyse IA Nutritionniste',20,y);y+=8;
-      var dateKey=today.toDateString();
-      var msgs=JSON.parse(localStorage.getItem('prem_messages_'+dateKey)||'[]');
-      var aiMsgs=msgs.filter(function(m){return m.role==='assistant'||m.sender==='ai';});
       doc.setFontSize(9);doc.setTextColor(51,51,51);doc.setFont('helvetica','normal');
-      if(aiMsgs.length>0){
-        aiMsgs.forEach(function(msg){
-          var txt=msg.content||msg.text||'';
-          var lines=doc.splitTextToSize(txt,160);
-          if(y+lines.length*5>270){doc.addPage();y=20;}
-          doc.setFillColor(245,245,240);doc.roundedRect(18,y-4,174,lines.length*5+6,3,3,'F');
-          doc.text(lines,22,y+2);y+=lines.length*5+12;
-        });
-      }else{doc.text('Aucune analyse IA disponible pour cette journ\u00e9e.',20,y);}
+      var hasAvis=false;
+      premDayTotals.meals.forEach(function(meal,idx){
+        if(meal.avis){hasAvis=true;
+          var title=meal.aliments&&meal.aliments[0]?meal.aliments[0].nom:'Repas '+(idx+1);
+          doc.setFont('helvetica','bold');doc.setFontSize(10);
+          if(y>265){doc.addPage();y=20;}
+          doc.text(title+' :',22,y);y+=6;
+          doc.setFont('helvetica','normal');doc.setFontSize(9);
+          var lines=doc.splitTextToSize(meal.avis,160);
+          if(y+lines.length*4.5>275){doc.addPage();y=20;}
+          doc.setFillColor(245,245,240);doc.roundedRect(18,y-4,174,lines.length*4.5+6,3,3,'F');
+          doc.text(lines,22,y+1);y+=lines.length*4.5+10;
+        }
+      });
+      if(!hasAvis){
+        var dateKey=today.toDateString();
+        var msgs=JSON.parse(localStorage.getItem('prem_messages_'+dateKey)||'[]');
+        var aiMsgs=msgs.filter(function(m){return m.role==='assistant';});
+        if(aiMsgs.length>0){
+          aiMsgs.forEach(function(msg){
+            var txt=msg.content||'';
+            if(msg.isHTML||txt.indexOf('<')>=0){
+              var tmp=document.createElement('div');tmp.innerHTML=txt;
+              txt=tmp.textContent||tmp.innerText||'';
+            }
+            txt=txt.trim();if(!txt)return;
+            var lines=doc.splitTextToSize(txt,160);
+            if(y+lines.length*4.5>275){doc.addPage();y=20;}
+            doc.setFillColor(245,245,240);doc.roundedRect(18,y-4,174,lines.length*4.5+6,3,3,'F');
+            doc.text(lines,22,y+1);y+=lines.length*4.5+10;
+          });
+        }else{doc.text('Aucune analyse IA disponible.',20,y);}
+      }
       var pc=doc.getNumberOfPages();
       for(var i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(130,130,130);
         doc.text('DiabeteFood - Rapport g\u00e9n\u00e9r\u00e9 le '+today.toLocaleDateString('fr-FR'),105,290,{align:'center'});
