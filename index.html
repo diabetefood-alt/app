@@ -2065,6 +2065,28 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
         <div class="nutrients" id="nutrients-grid"></div>
       </div>
 
+      
+      <div class="portion-calc-section" id="portion-calc" style="display:none;">
+        <div class="portion-calc-title">⚖️ Calculateur de portion</div>
+        <div class="portion-slider-row">
+          <div class="portion-input-wrap">
+            <input type="number" id="portion-input" min="1" max="500" value="100">
+            <span>g</span>
+          </div>
+          <input type="range" id="portion-slider" class="portion-slider" min="1" max="500" value="100">
+        </div>
+        <div class="portion-presets" id="portion-presets">
+          <button class="portion-preset-btn" data-val="15">15g</button>
+          <button class="portion-preset-btn" data-val="30">30g</button>
+          <button class="portion-preset-btn" data-val="50">50g</button>
+          <button class="portion-preset-btn active" data-val="100">100g</button>
+          <button class="portion-preset-btn" data-val="150">150g</button>
+          <button class="portion-preset-btn" data-val="200">200g</button>
+        </div>
+        <div class="portion-results" id="portion-results"></div>
+        <div class="portion-insulin-box" id="portion-insulin"></div>
+      </div>
+
       <div class="advice-section">
         <div class="advice-title" id="advice-title">⚕ Conseils Diabète T1</div>
         <div id="advice-list"></div>
@@ -2418,6 +2440,144 @@ function generatePDF() {
 
 
  20px 0}
+
+  /* Portion Calculator */
+  .portion-calc-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #fff8f0, #fff3e6);
+    border-radius: 16px;
+    border: 2px solid #ffe5cc;
+  }
+  .portion-calc-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #e67e22;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .portion-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .portion-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff;
+    border: 2px solid #ffe5cc;
+    border-radius: 12px;
+    padding: 6px 10px;
+    min-width: 80px;
+  }
+  .portion-input-wrap input {
+    width: 50px;
+    border: none;
+    outline: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e67e22;
+    text-align: center;
+    background: transparent;
+    -moz-appearance: textfield;
+  }
+  .portion-input-wrap input::-webkit-outer-spin-button,
+  .portion-input-wrap input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .portion-input-wrap span {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: 600;
+  }
+  .portion-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #ffe5cc, #ff6b00);
+    outline: none;
+  }
+  .portion-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff6b00;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(255,107,0,0.3);
+    border: 3px solid #fff;
+  }
+  .portion-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff6b00;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(255,107,0,0.3);
+    border: 3px solid #fff;
+  }
+  .portion-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .portion-preset-btn {
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1.5px solid #ffe5cc;
+    background: #fff;
+    color: #e67e22;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .portion-preset-btn.active, .portion-preset-btn:active {
+    background: #ff6b00;
+    color: #fff;
+    border-color: #ff6b00;
+  }
+  .portion-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .portion-result-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid #f0f0f0;
+  }
+  .portion-result-icon { font-size: 1.2rem; }
+  .portion-result-info { display: flex; flex-direction: column; }
+  .portion-result-value { font-weight: 800; font-size: 1rem; }
+  .portion-result-label { font-size: 0.7rem; color: #999; font-weight: 500; }
+  .portion-insulin-box {
+    margin-top: 10px;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid #a5d6a7;
+  }
+  .portion-insulin-icon { font-size: 1.5rem; }
+  .portion-insulin-info { display: flex; flex-direction: column; }
+  .portion-insulin-value { font-weight: 800; font-size: 1.15rem; color: #2e7d32; }
+  .portion-insulin-label { font-size: 0.75rem; color: #558b2f; font-weight: 500; }
 </style></head><body>
   <div class="header">
     <h1> DiabeteFood — Rapport nutritionnel</h1>
@@ -2724,6 +2884,8 @@ Réponds UNIQUEMENT en JSON valide:
       setTimeout(() => switchPage('premium'), 1200);
     }
 
+    result.nutrientsDataRaw = nutrientsData;
+    result.ig = gi;
     document.getElementById('result-card').innerHTML = originalResultCardHTML;
         showResult(result);
     scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:productImageUrl});
@@ -2738,7 +2900,76 @@ Réponds UNIQUEMENT en JSON valide:
 }
 
 // ─── SHOW RESULT ─────────────────────────────────────────────────────────────
-function showResult(r) {
+
+  // --- PORTION CALCULATOR ---
+  var _portionRawData = null;
+  var _portionDiabeteType = 1;
+
+  function setupPortionCalculator(nutrientsData, dType) {
+    _portionRawData = nutrientsData;
+    _portionDiabeteType = dType || 1;
+    var calc = document.getElementById('portion-calc');
+    if (!calc || !nutrientsData) return;
+    calc.style.display = 'block';
+    var slider = document.getElementById('portion-slider');
+    var input = document.getElementById('portion-input');
+    var presets = document.querySelectorAll('.portion-preset-btn');
+    function updatePortion(grams) {
+      grams = Math.max(1, Math.min(500, parseInt(grams) || 100));
+      slider.value = grams;
+      input.value = grams;
+      presets.forEach(function(btn) {
+        btn.classList.toggle('active', parseInt(btn.getAttribute('data-val')) === grams);
+      });
+      renderPortionResults(grams);
+    }
+    slider.oninput = function() { updatePortion(this.value); };
+    input.oninput = function() { updatePortion(this.value); };
+    presets.forEach(function(btn) {
+      btn.onclick = function() { updatePortion(this.getAttribute('data-val')); };
+    });
+    updatePortion(100);
+  }
+
+  function renderPortionResults(grams) {
+    var d = _portionRawData;
+    if (!d) return;
+    var f = grams / 100;
+    var glucVal = d.glucides ? (d.glucides * f) : null;
+    var sucVal = d.sucres ? (d.sucres * f) : null;
+    var fibVal = d.fibres ? (d.fibres * f) : null;
+    var calVal = d.calories ? (d.calories * f) : null;
+    var protVal = d.proteines ? (d.proteines * f) : null;
+    var lipVal = d.lipides ? (d.lipides * f) : null;
+    var items = [
+      {icon:'\u{1F35E}',label:'Glucides',value:glucVal,unit:'g',color:'#e67e22'},
+      {icon:'\u{1F36C}',label:'Sucres',value:sucVal,unit:'g',color:'#e74c3c'},
+      {icon:'\u{1F966}',label:'Fibres',value:fibVal,unit:'g',color:'#27ae60'},
+      {icon:'\u{1F525}',label:'Calories',value:calVal,unit:'kcal',color:'#8e44ad'},
+      {icon:'\u{1F969}',label:'Prot\u00e9ines',value:protVal,unit:'g',color:'#3498db'},
+      {icon:'\u{1F9C8}',label:'Lipides',value:lipVal,unit:'g',color:'#f39c12'}
+    ];
+    var html = items.map(function(n) {
+      var v = (n.value !== null && n.value !== undefined) ? n.value.toFixed(1) + n.unit : 'N/A';
+      return '<div class="portion-result-item"><div class="portion-result-icon">' + n.icon + '</div><div class="portion-result-info"><div class="portion-result-value" style="color:' + n.color + '">' + v + '</div><div class="portion-result-label">' + n.label + '</div></div></div>';
+    }).join('');
+    document.getElementById('portion-results').innerHTML = html;
+    var insulinBox = document.getElementById('portion-insulin');
+    if (glucVal !== null && _portionDiabeteType === 1) {
+      var ratio = 10;
+      var units = (glucVal / ratio).toFixed(1);
+      insulinBox.style.display = 'flex';
+      insulinBox.innerHTML = '<div class="portion-insulin-icon">\u{1F489}</div><div class="portion-insulin-info"><div class="portion-insulin-value">~' + units + ' unit\u00e9s insuline rapide</div><div class="portion-insulin-label">' + glucVal.toFixed(1) + 'g glucides \u00f7 ratio 1:' + ratio + ' (pour ' + grams + 'g)</div></div>';
+    } else if (glucVal !== null && _portionDiabeteType === 2) {
+      insulinBox.style.display = 'flex';
+      var cg = (glucVal * (d.ig || 50) / 100).toFixed(1);
+      insulinBox.innerHTML = '<div class="portion-insulin-icon">\u{1F4CA}</div><div class="portion-insulin-info"><div class="portion-insulin-value">Charge glyc\u00e9mique: ' + cg + '</div><div class="portion-insulin-label">Pour ' + grams + 'g de produit</div></div>';
+    } else {
+      insulinBox.style.display = 'none';
+    }
+  }
+
+  function showResult(r) {
   const score = Math.min(100, Math.max(0, r.score));
   const gi = Math.min(100, Math.max(0, r.index_glycemique || 50));
   const colorMap = {'excellent':'green','acceptable':'orange','à éviter':'red'};
@@ -2805,6 +3036,13 @@ function showResult(r) {
     }
 
     document.getElementById('advice-list').innerHTML = adviceHTML;
+
+  // Setup portion calculator
+  if (r.nutrientsDataRaw) {
+    setupPortionCalculator(r.nutrientsDataRaw, diabeteType);
+  } else {
+    var pc = document.getElementById('portion-calc'); if(pc) pc.style.display = 'none';
+  }
 
   document.getElementById('result-card').style.display = 'block';
   document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -2906,7 +3144,9 @@ if ('serviceWorker' in navigator) {
         document.getElementById('loading-card').style.display = 'none';
         result.imageUrl = null;
         checkGlucideAlert(nutrientsData.glucides);
-        document.getElementById('result-card').innerHTML = originalResultCardHTML;
+        result.nutrientsDataRaw = nutrientsData;
+    result.ig = gi;
+    document.getElementById('result-card').innerHTML = originalResultCardHTML;
         showResult(result);
         scanHistory.unshift({...result, time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), barcode, imageUrl:null});
         localStorage.setItem('diabetefood_history', JSON.stringify(scanHistory));
