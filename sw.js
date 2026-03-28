@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diabetefood-v22';
+const CACHE_NAME = 'diabetefood-v23';
 const ASSETS = [
   '/app/',
   '/app/index.html',
@@ -24,6 +24,6 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.match(event.request).then(r => r || fetch(event.request))
   );
 });
