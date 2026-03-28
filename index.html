@@ -806,20 +806,17 @@
   #product-img-container {
     display: flex;
     justify-content: center;
-    padding: 20px 16px 16px;
-    background: linear-gradient(180deg, #fff8f2 0%, #ffffff 100%);
-    border-bottom: none;
+    padding: 16px 16px 12px;
+    background: #ffffff;
+    border-bottom: 2px solid #f0f0f0;
   }
   .product-img-banner {
     width: 140px;
     height: 140px;
-    object-fit: contain;
-    border-radius: 20px;
+    object-fit: cover;
+    border-radius: 16px;
     display: block;
-    box-shadow: none;
-    mix-blend-mode: multiply;
-    -webkit-mask-image: radial-gradient(ellipse 90% 90% at center, black 60%, transparent 100%);
-    mask-image: radial-gradient(ellipse 90% 90% at center, black 60%, transparent 100%);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
   .product-img-placeholder {
     width: 100%;
@@ -837,11 +834,10 @@
     width: 50px; height: 50px;
     border-radius: 12px;
     object-fit: contain;
-    background: transparent;
+    background: #f5f5f5;
     border: 2px solid #ffe5cc;
     flex-shrink: 0;
     padding: 3px;
-    mix-blend-mode: multiply;
   }
   .history-thumb-placeholder {
     width: 50px; height: 50px;
@@ -2216,26 +2212,6 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 
 <script>
 
-// Background removal for product images
-function removeImageBg(img) {
-  try {
-    var cv = document.createElement('canvas');
-    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-    var ctx = cv.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    var data = ctx.getImageData(0, 0, cv.width, cv.height);
-    var d = data.data;
-    var samples = [[0,0],[cv.width-1,0],[0,cv.height-1],[cv.width-1,cv.height-1],[1,1],[cv.width-2,1],[1,cv.height-2],[cv.width-2,cv.height-2]];
-    var rS=0,gS=0,bS=0,cnt=0;
-    samples.forEach(function(s){ if(s[0]>=0&&s[0]<cv.width&&s[1]>=0&&s[1]<cv.height){ var i=(s[1]*cv.width+s[0])*4; rS+=d[i];gS+=d[i+1];bS+=d[i+2];cnt++; }});
-    var bgR=Math.round(rS/cnt),bgG=Math.round(gS/cnt),bgB=Math.round(bS/cnt);
-    var tol=45;
-    for(var i=0;i<d.length;i+=4){ var dr=d[i]-bgR,dg=d[i+1]-bgG,db=d[i+2]-bgB; var dist=Math.sqrt(dr*dr+dg*dg+db*db); if(dist<tol){d[i+3]=0;}else if(dist<tol+20){d[i+3]=Math.round(255*(dist-tol)/20);}}
-    ctx.putImageData(data,0,0);
-    img.src = cv.toDataURL('image/png');
-  } catch(e){}
-}
-
 const API_URL = "https://diabetefood-api.diabetefood.workers.dev";
 let scanHistory = JSON.parse(localStorage.getItem('diabetefood_history') || '[]');
     const originalResultCardHTML = document.getElementById('result-card').innerHTML;
@@ -2774,7 +2750,7 @@ function showResult(r) {
 
   const imgContainer = document.getElementById('product-img-container');
   if (r.imageUrl) {
-    imgContainer.innerHTML = ''; var img = document.createElement('img'); img.className = 'product-img-banner'; img.crossOrigin = 'anonymous'; img.alt = r.nom; img.onload = function(){ removeImageBg(this); }; img.onerror = function(){ this.style.display='none'; }; imgContainer.appendChild(img); img.src = r.imageUrl;
+    imgContainer.innerHTML = ''; var img = document.createElement('img'); img.className = 'product-img-banner'; img.src = r.imageUrl; img.alt = r.nom; img.onerror = function(){ this.style.display='none'; }; imgContainer.appendChild(img);
   } else {
     imgContainer.innerHTML = ''; imgContainer.appendChild(createMascotSVG(score >= 60 ? 'happy' : score >= 30 ? 'neutral' : 'worried', 80));
   }
@@ -2841,7 +2817,7 @@ function renderHistory() {
   const colorMap = {'excellent':'#22c55e','acceptable':'#f59e0b','à éviter':'#ef4444'};
   list.innerHTML = scanHistory.map((h, index) => {
     const thumb = h.imageUrl
-      ? `<img class="history-thumb" crossorigin="anonymous" src="${h.imageUrl}" alt="" onload="removeImageBg(this)" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>■</div>'">`
+      ? `<img class="history-thumb" src="${h.imageUrl}" alt="" onerror="this.outerHTML='<div class=\\'history-thumb-placeholder\\'>■</div>'">`
       : `<div class="history-thumb-placeholder">■</div>`;
     const escapedName = (h.nom || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<div class="history-item" onclick="showHistoryItem(${index})">
