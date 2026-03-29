@@ -3070,7 +3070,7 @@ if ('serviceWorker' in navigator) {
       document.getElementById('result-card').style.display = 'none';
       document.getElementById('loading-card').style.display = 'block';
 
-      const nutrientsData = { glucides: glucides||null, sucres: sucres||null, fibres: fibres||null, calories: calories||null, proteines: proteines||null, lipides: lipides||null };
+      const nutrientsData = { glucides: glucides||null, sucres: sucres||null, fibres: fibres||null, calories: calories||null, proteines: null, lipides: null };
       const nutritionText = 'Produit: ' + name + '\nValeurs pour 100g:\n- glucides: ' + (glucides||'N/A') + 'g\n- sucres: ' + (sucres||'N/A') + 'g\n- fibres: ' + (fibres||'N/A') + 'g\n- calories: ' + (calories||'N/A') + ' kcal';
 
       const typeLabel = diabeteType === 1 ? 'TYPE 1 (insulino-d\u00e9pendant)' : 'TYPE 2 (non insulino-d\u00e9pendant)';
