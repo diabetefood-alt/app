@@ -2321,8 +2321,8 @@ function canScan() {
 }
 
 // ─── PREMIUM POPUP ────────────────────────────────────────────────────────────
-function showPremiumPopup() { return;
-  document.getElementById('premium-overlay').classList.remove('hidden');
+function showPremiumPopup() {
+  document.getElementById('premium-overlay').style.display = 'flex';
 }
 function closePremiumPopup() {
   document.getElementById('premium-overlay').classList.add('hidden');
