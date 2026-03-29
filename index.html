@@ -1325,7 +1325,7 @@
   }
 
   /* ── PREMIUM POPUP ── */
-  .premium-overlay { display:none!important;
+  .premium-overlay { 
     position: fixed; inset: 0;
     background: rgba(10,4,0,0.85);
     backdrop-filter: blur(8px);
@@ -1965,6 +1965,17 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 .portion-insulin-info { display: flex; flex-direction: column; }
 .portion-insulin-value { font-weight: 800; font-size: 1.15rem; color: #2e7d32; }
 .portion-insulin-label { font-size: 0.75rem; color: #558b2f; font-weight: 500; }
+
+/* Premium Lock Overlay */
+.premium-locked { position: relative; overflow: hidden; }
+.premium-locked > *:not(.premium-lock-overlay) { filter: blur(6px); pointer-events: none; user-select: none; }
+.premium-lock-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(255,248,240,0.7); backdrop-filter: blur(2px); border-radius: 16px; }
+.premium-lock-icon { font-size: 2rem; margin-bottom: 8px; }
+.premium-lock-text { font-weight: 700; font-size: 0.9rem; color: #e67e22; margin-bottom: 4px; }
+.premium-lock-sub { font-size: 0.75rem; color: #999; margin-bottom: 10px; text-align: center; padding: 0 16px; }
+.btn-unlock-premium { background: linear-gradient(135deg, #ff6b00, #ff8c00); color: #fff; border: none; border-radius: 25px; padding: 10px 24px; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(255,107,0,0.3); transition: transform 0.2s; }
+.btn-unlock-premium:active { transform: scale(0.95); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -2272,13 +2283,13 @@ let diabeteType = 1;
 
 // ─── FREEMIUM CONFIG ─────────────────────────────────────────────────────────
 // ⚙ SWITCH: Mets FREEMIUM_ENABLED = true pour activer la limite quand tu es prêt
-const FREEMIUM_ENABLED = false;
+const FREEMIUM_ENABLED = true;
 const FREE_SCANS_PER_DAY = 5;
 
 function getTodayKey() { return 'scans_' + new Date().toISOString().slice(0,10); }
 function getScansToday() { return parseInt(localStorage.getItem(getTodayKey()) || '0'); }
 function incrementScans() { localStorage.setItem(getTodayKey(), getScansToday() + 1); }
-function isPremium() { return false; return localStorage.getItem('diabetefood_premium') === 'true'; }
+function isPremium() { return localStorage.getItem('diabetefood_premium') === 'true'; }
 
 function renderScanCounter() {
   const counter = document.getElementById('scan-counter');
@@ -2306,8 +2317,7 @@ function renderScanCounter() {
 }
 
 function canScan() {
-  if (!FREEMIUM_ENABLED || isPremium()) return true;
-  return getScansToday() < FREE_SCANS_PER_DAY;
+  return true; // Scan always free, results are limited for non-premium
 }
 
 // ─── PREMIUM POPUP ────────────────────────────────────────────────────────────
@@ -2636,7 +2646,41 @@ async function analyzeBarcode(barcode) {
 
   if (!product) {
     document.getElementById('loading-card').style.display = 'none';
-    document.getElementById('result-card').style.display = 'block';
+  
+  // === PREMIUM LOCK: blur sections for free users ===
+  if (FREEMIUM_ENABLED && !isPremium()) {
+    // Lock portion calculator
+    var portionCalc = document.getElementById('portion-calc');
+    if (portionCalc && portionCalc.style.display !== 'none') {
+      portionCalc.classList.add('premium-locked');
+      if (!portionCalc.querySelector('.premium-lock-overlay')) {
+        var ov1 = document.createElement('div');
+        ov1.className = 'premium-lock-overlay';
+        ov1.innerHTML = '<span class="premium-lock-icon">\ud83d\udd12</span><span class="premium-lock-text">Calculateur de portion</span><span class="premium-lock-sub">D\u00e9bloquez le calcul pr\u00e9cis des glucides et de l\'insuline par portion</span><button class="btn-unlock-premium" onclick="showPremiumPopup()">\u2b50 D\u00e9bloquer Premium</button>';
+        portionCalc.appendChild(ov1);
+      }
+    }
+    // Lock advice section
+    var adviceSection = document.querySelector('.advice-section');
+    if (adviceSection) {
+      adviceSection.classList.add('premium-locked');
+      if (!adviceSection.querySelector('.premium-lock-overlay')) {
+        var ov2 = document.createElement('div');
+        ov2.className = 'premium-lock-overlay';
+        ov2.innerHTML = '<span class="premium-lock-icon">\ud83d\udca1</span><span class="premium-lock-text">Conseils personnalis\u00e9s</span><span class="premium-lock-sub">Obtenez des conseils adapt\u00e9s \u00e0 votre diab\u00e8te, la portion id\u00e9ale et les alternatives</span><button class="btn-unlock-premium" onclick="showPremiumPopup()">\u2b50 D\u00e9bloquer Premium</button>';
+        adviceSection.appendChild(ov2);
+      }
+    }
+  } else {
+    // Remove locks if premium
+    document.querySelectorAll('.premium-locked').forEach(function(el) {
+      el.classList.remove('premium-locked');
+      var ov = el.querySelector('.premium-lock-overlay');
+      if (ov) ov.remove();
+    });
+  }
+
+  document.getElementById('result-card').style.display = 'block';
     document.getElementById('result-card').innerHTML = '<div class="not-found-container">' +
       '<div class="not-found-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6" stroke-linecap="round"/></svg></div>' +
       '<h3 class="not-found-title">Produit non trouv\u00e9</h3>' +
