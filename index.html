@@ -2967,6 +2967,38 @@ function showResult(r) {
   }
 
   document.getElementById('result-card').style.display = 'block';
+  
+
+  // === PREMIUM LOCK IN SHOWRESULT ===
+  if (FREEMIUM_ENABLED && !isPremium()) {
+    var _pc = document.getElementById('portion-calc');
+    if (_pc && _pc.style.display !== 'none') {
+      _pc.classList.add('premium-locked');
+      if (!_pc.querySelector('.premium-lock-overlay')) {
+        var _ov1 = document.createElement('div');
+        _ov1.className = 'premium-lock-overlay';
+        _ov1.innerHTML = '<span class="premium-lock-icon">\ud83d\udd12</span><span class="premium-lock-text">Calculateur de portion</span><span class="premium-lock-sub">D\u00e9bloquez le calcul pr\u00e9cis des glucides et de l\'insuline par portion</span><button class="btn-unlock-premium" onclick="showPremiumPopup()">\u2b50 D\u00e9bloquer Premium</button>';
+        _pc.appendChild(_ov1);
+      }
+    }
+    var _as = document.querySelector('.advice-section');
+    if (_as) {
+      _as.classList.add('premium-locked');
+      if (!_as.querySelector('.premium-lock-overlay')) {
+        var _ov2 = document.createElement('div');
+        _ov2.className = 'premium-lock-overlay';
+        _ov2.innerHTML = '<span class="premium-lock-icon">\ud83d\udca1</span><span class="premium-lock-text">Conseils personnalis\u00e9s</span><span class="premium-lock-sub">Obtenez des conseils adapt\u00e9s \u00e0 votre diab\u00e8te, la portion id\u00e9ale et les alternatives</span><button class="btn-unlock-premium" onclick="showPremiumPopup()">\u2b50 D\u00e9bloquer Premium</button>';
+        _as.appendChild(_ov2);
+      }
+    }
+  } else {
+    document.querySelectorAll('.premium-locked').forEach(function(el) {
+      el.classList.remove('premium-locked');
+      var _ov = el.querySelector('.premium-lock-overlay');
+      if (_ov) _ov.remove();
+    });
+  }
+
   document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
