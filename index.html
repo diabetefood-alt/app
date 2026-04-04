@@ -162,7 +162,30 @@
         img.src = URL.createObjectURL(file);
       });
     }
-    async function premHandlePhoto(event) {
+    async function premCorrectFood(btn) {
+      var card = btn.closest('div').parentElement;
+      var existing = card.querySelector('.correct-input-box');
+      if (existing) { existing.remove(); return; }
+      var box = document.createElement('div');
+      box.className = 'correct-input-box';
+      box.style.cssText = 'margin-top:8px;display:flex;gap:6px;justify-content:center;';
+      box.innerHTML = '<input type="text" placeholder="Nom exact de l\u2019aliment" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;max-width:200px;"><button onclick="premApplyCorrection(this)" style="background:#ff6b00;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;font-weight:bold;">OK</button>';
+      card.appendChild(box);
+      box.querySelector('input').focus();
+    }
+
+    function premApplyCorrection(btn) {
+      var box = btn.parentElement;
+      var input = box.querySelector('input');
+      var newName = input.value.trim();
+      if (!newName) return;
+      var card = box.parentElement;
+      var nameEl = card.querySelector('strong') || card.querySelector('b');
+      if (nameEl) nameEl.textContent = newName;
+      box.innerHTML = '<span style="color:#16a34a;font-size:13px;">\u2705 Corrig\u00e9 : ' + newName + '</span>';
+    }
+
+    function premHandlePhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
       const base64 = await compressImage(file, 1024);
@@ -186,7 +209,7 @@
               model:'claude-haiku-4-5-20251001',
               max_tokens:1024,
               system:'Tu es Dr. DiabeteFood. Analyse cette photo de repas pour un diab\u00e9tique T' + diabType + '. Identifie chaque aliment, estime les portions et calcule les macros. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}',
-              messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64.split(',')[1]}},{type:'text',text:'Analyse ce repas pour un diab\u00e9tique'}]}]
+              messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64.split(',')[1]}},{type:'text',text:'Analyse cette photo de repas pour un diab\u00e9tique. IMPORTANT: Identifie pr\u00e9cis\u00e9ment chaque aliment visible. Si tu vois un emballage ou une marque, utilise le nom exact du produit (ex: Quaker, pas riz). Distingue bien les c\u00e9r\u00e9ales/flocons d\u2019avoine du riz. Pour chaque aliment, estime la portion, les calories, glucides et l\u2019indice glyc\u00e9mique. R\u00e9ponds en JSON.'}]}]
             })
           });
           const data = await response.json();
@@ -202,6 +225,8 @@
             const t = r.total||{};
             cardHtml += '<div class="prem-meal-total"><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.calories||0) + '</div><div class="prem-meal-total-label">Cal</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val" style="color:var(--accent)">' + (t.glucides||0) + 'g</div><div class="prem-meal-total-label">Gluc</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.proteines||0) + 'g</div><div class="prem-meal-total-label">Prot</div></div><div class="prem-meal-total-item"><div class="prem-meal-total-val">' + (t.lipides||0) + 'g</div><div class="prem-meal-total-label">Lip</div></div></div></div>';
             if (r.avis) cardHtml += '<div style="margin-top:8px;font-size:0.82rem;color:#555;">' + r.avis + '</div>';
+          cardHtml += '<div style="text-align:center;margin-top:8px;"><button onclick="premCorrectFood(this)" style="background:none;border:1px solid #ff6b00;color:#ff6b00;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;">\u2709 Ce n\u2019est pas le bon aliment ?</button></div>';
+
             premMessages.push({role:'assistant', content:cardHtml, isHTML:true});
             premDayTotals.calories += (t.calories||0);
             premDayTotals.glucides += (t.glucides||0);
