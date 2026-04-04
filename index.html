@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>
+// Force cache update v28
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.update(); });
+  });
+  caches.keys().then(function(names) {
+    names.forEach(function(name) {
+      if (name !== 'diabetefood-v28') caches.delete(name);
+    });
+  });
+}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DiabeteFood — Scanner Alimentaire</title>
