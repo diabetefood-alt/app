@@ -2433,46 +2433,37 @@ function updatePDFPreview() {
 }
 
 function generatePDF() {
-  if (scanHistory.length === 0) { showError("Scannez d'abord quelques produits !"); return; }
-  const date = new Date().toLocaleDateString('fr-FR');
-  const avgScore = Math.round(scanHistory.reduce((a,b) => a + b.score, 0) / scanHistory.length);
-  const rows = scanHistory.map(h => `
-    <tr>
-      <td>${h.nom}</td>
-      <td style="text-align:center;font-weight:700;color:${h.verdict==='excellent'?'#16a34a':h.verdict==='acceptable'?'#d97706':'#dc2626'}">${h.score}/100</td>
-      <td>${h.nutriments?.glucides||'N/A'}</td>
-      <td>${h.nutriments?.sucres||'N/A'}</td>
-      <td>${h.time||''}</td>
-    </tr>`).join('');
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-  <title>Rapport DiabeteFood — ${date}</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a0a00;}
-    h1{color:#ff6b00;font-size:1.4rem;} h2{font-size:1rem;color:#5c3010;margin-top:20px;}
-    .header{border-bottom:3px solid #ff6b00;padding-bottom:12px;margin-bottom:20px;}
-    .stats{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;}
-    .stat-box{background:#f7f7f7;border:1px solid #ffe5cc;border-radius:8px;padding:12px 16px;text-align:center;}
-    .stat-num{font-size:1.5rem;font-weight:900;color:#ff6b00;}
-    .stat-lbl{font-size:0.75rem;color:#a07050;}
-    table{width:100%;border-collapse:collapse;font-size:0.85rem;}
-    th{background:#f5f5f5;padding:8px;text-align:left;border-bottom:2px solid #ffe5cc;}
-    td{padding:7px 8px;border-bottom:1px solid #ffe5cc;}
-    .disclaimer{background:#f7f7f7;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:20px;font-size:0.78rem;color:#92400e;}
-  
-.prem-land-feat { display:flex; align-items:flex-start; gap:14px; width:100%; max-width:340px; padding:16px; margin-bottom:12px; background:rgba(255,255,255,0.75); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1.5px solid rgba(255,107,0,0.1); border-radius:16px; box-shadow:0 2px 8px rgba(26,10,0,0.04),0 8px 24px rgba(255,107,0,0.06); }
-.prem-land-icon { font-size:32px; flex-shrink:0; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(255,107,0,0.08); border-radius:12px; }
-.prem-land-title { font-size:15px; font-weight:700; color:#1a0a00; margin-bottom:4px; }
-.prem-land-desc { font-size:13px; color:#666; line-height:1.4; }
-#prem-landing { animation:pageIn 0.3s ease; }
-#page-premium #prem-landing { display:flex; }
-#page-premium .prem-header, #page-premium .prem-calendar, #page-premium .prem-summary, #page-premium .prem-chat, #page-premium .prem-input-bar { display:none !important; }
-#page-premium.prem-unlocked #prem-landing { display:none !important; }
-#page-premium.prem-unlocked .prem-header, #page-premium.prem-unlocked .prem-calendar, #page-premium.prem-unlocked .prem-summary { display:flex !important; }
-#page-premium.prem-unlocked .prem-chat { display:flex !important; }
-#page-premium.prem-unlocked .prem-input-bar { display:flex !important; }
-
-
- 20px 0}
+    if (!scanHistory || scanHistory.length === 0) {
+      alert('Aucun scan. Scannez des produits d\'abord.');
+      return;
+    }
+    var date = new Date().toLocaleDateString('fr-FR');
+    var avg = (scanHistory.reduce(function(a,b){return a+(b.score||0);},0)/scanHistory.length).toFixed(1);
+    var rows = scanHistory.map(function(item){
+      return '<tr><td>'+((item.nom||'Inconnu').substring(0,30))+'</td><td>'+(item.score!=null?item.score:'-')+'</td><td>'+(item.glucide!=null?item.glucide+'g':'-')+'</td><td>'+(item.sucre!=null?item.sucre+'g':'-')+'</td><td>'+(item.verdict||'-')+'</td></tr>';
+    }).join('');
+    var w = window.open('','_blank');
+    w.document.write('<!DOCTYPE html><html><head><title>Rapport DiabeteFood</title>' +
+      '<style>body{font-family:Arial,sans-serif;padding:20px;color:#333}' +
+      'h1{color:#ff6b00;margin-bottom:5px}' +
+      '.sub{color:#666;margin-bottom:15px}' +
+      '.stats{font-size:16px;margin:10px 0}' +
+      'table{width:100%;border-collapse:collapse;margin-top:10px}' +
+      'th{background:#ff6b00;color:#fff;padding:8px;text-align:left}' +
+      'td{padding:6px 8px;border-bottom:1px solid #ddd}' +
+      'tr:nth-child(even){background:#fff8f2}' +
+      '.footer{margin-top:20px;color:#999;font-size:12px}' +
+      '@media print{body{padding:0}.no-print{display:none}}</style></head>' +
+      '<body>' +
+      '<h1>DiabeteFood</h1>' +
+      '<p class="sub">Rapport alimentaire du ' + date + '</p>' +
+      '<p class="stats"><strong>Produits :</strong> ' + scanHistory.length + ' &nbsp;|&nbsp; <strong>Score moyen :</strong> ' + avg + ' / 10</p>' +
+      '<table><tr><th>Produit</th><th>Score</th><th>Glucides</th><th>Sucres</th><th>Verdict</th></tr>' + rows + '</table>' +
+      '<p class="footer">G\u00e9n\u00e9r\u00e9 par DiabeteFood \u2014 ' + date + '</p>' +
+      '<script>window.print();<\/script>' +
+      '</body></html>');
+    w.document.close();
+  }
 </style></head><body>
   <div class="header">
     <h1> DiabeteFood — Rapport nutritionnel</h1>
