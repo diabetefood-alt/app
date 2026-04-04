@@ -2489,12 +2489,24 @@ function generatePDF() {
   <tbody>${rows}</tbody></table>
   <div class="disclaimer">⚕️ Ce rapport est généré par l'application DiabeteFood à titre informatif uniquement. Il ne remplace pas l'avis de votre médecin ou diabétologue. Veuillez consulter votre équipe médicale pour toute décision thérapeutique.</div>
   </body></html>`;
-  const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `rapport-diabetefood-${date.replace(/\//g,'-')}.html`;
-  a.click(); URL.revokeObjectURL(url);
-  showError('✅ Rapport généré ! Ouvrez le fichier et imprimez-le (Ctrl+P).');
+  // Créer un vrai PDF avec jsPDF
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:210mm;';
+    document.body.appendChild(container);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    pdf.html(container, {
+      callback: function(doc) {
+        document.body.removeChild(container);
+        doc.save('DiabeteFood_Rapport_' + date.replace(/\//g, '-') + '.pdf');
+      },
+      x: 5,
+      y: 5,
+      width: 200,
+      windowWidth: 800,
+      margin: [5, 5, 5, 5]
+    });
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
