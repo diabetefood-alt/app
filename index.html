@@ -2508,48 +2508,54 @@ function selectType(t) {
 }
 
 // ─── BARCODE SCANNER ──────────────────────────────────────────────────────────
-function startScanner() {
-  if (!canScan()) { showPremiumPopup(); return; }
-  const container = document.getElementById('scanner-container');
-  const idle = document.getElementById('scanner-idle');
-  container.style.display = 'block';
-  idle.style.display = 'none';
-  document.body.style.overflow = 'hidden';
-  document.body.classList.add('scanner-active');
-  // Smooth fade-in animation
-  requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); });
-  Quagga.init({
-    inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}} },
-    decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] },
-    locate: true
-  }, err => {
-    if (err) { showError("Impossible d'accéder à la caméra"); stopScanner(); return; }
-    Quagga.start(); scannerActive = true;
-  });
-  let lastCode = null, lastTime = 0;
-  Quagga.onDetected(result => {
-    const code = result.codeResult.code;
-    const now = Date.now();
-    if (code === lastCode && now - lastTime < 3000) return;
-    lastCode = code; lastTime = now;
-    stopScanner();
-    document.getElementById('barcode-input').value = code;
-    analyzeBarcode(code);
-  });
-}
-
-function stopScanner() {
-  if (!scannerActive) return;
-  Quagga.stop(); scannerActive = false;
-  const sc = document.getElementById('scanner-container');
-  sc.classList.remove('scanner-visible');
-  setTimeout(() => {
-    sc.style.display = 'none';
-    document.getElementById('scanner-idle').style.display = 'block';
-  }, 500);
-  document.body.style.overflow = '';
-  document.body.classList.remove('scanner-active');
-}
+var _scannerCallback = null;
+        function startScanner() {
+            if (!canScan()) { showPremiumPopup(); return; }
+            const container = document.getElementById('scanner-container');
+            const idle = document.getElementById('scanner-idle');
+            container.style.display = 'block';
+            idle.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('scanner-active');
+            requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); });
+            if (_scannerCallback) { try { Quagga.offDetected(_scannerCallback); } catch(e){} _scannerCallback = null; }
+            Quagga.init({
+                inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}}, area: { top: "15%", right: "5%", left: "5%", bottom: "15%" } },
+                decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"], multiple: false },
+                locate: true,
+                frequency: 10
+            }, err => {
+                if (err) { showError("Impossible d'accéder à la caméra"); stopScanner(); return; }
+                Quagga.start();
+                scannerActive = true;
+            });
+            let lastCode = null, lastTime = 0;
+            _scannerCallback = function(result) {
+                const code = result.codeResult.code;
+                const errors = result.codeResult.decodedCodes.filter(function(d){ return d.error !== undefined; }).map(function(d){ return d.error; });
+                const avgError = errors.length > 0 ? errors.reduce(function(s,e){ return s+e; }, 0) / errors.length : 1;
+                if (avgError > 0.25) return;
+                const now = Date.now();
+                if (code === lastCode && now - lastTime < 3000) return;
+                lastCode = code;
+                lastTime = now;
+                stopScanner();
+                document.getElementById('barcode-input').value = code;
+                analyzeBarcode(code);
+            };
+            Quagga.onDetected(_scannerCallback);
+        }
+        function stopScanner() {
+            if (!scannerActive) return;
+            if (_scannerCallback) { try { Quagga.offDetected(_scannerCallback); } catch(e){} _scannerCallback = null; }
+            Quagga.stop();
+            scannerActive = false;
+            const sc = document.getElementById('scanner-container');
+            sc.classList.remove('scanner-visible');
+            setTimeout(() => { sc.style.display = 'none'; document.getElementById('scanner-idle').style.display = 'block'; }, 500);
+            document.body.style.overflow = '';
+            document.body.classList.remove('scanner-active');
+        }
 
 // ─── OPEN FOOD FACTS ──────────────────────────────────────────────────────────
 async function fetchProductInfo(barcode) {
