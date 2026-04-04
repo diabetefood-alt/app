@@ -49,11 +49,10 @@
     function renderPremChat() {
       const chat = document.getElementById('prem-chat');
       if (!chat) return;
-      if (premMessages.length === 0) return;
-      // Remove welcome
       const welcome = chat.querySelector('.prem-welcome');
-      if (welcome) welcome.style.display = 'none';
-      // Render messages
+if (premMessages.length === 0) { if (welcome) welcome.style.display = ''; let existingMsgs = chat.querySelectorAll('.prem-msg'); existingMsgs.forEach(m => m.remove()); return; }
+if (welcome) welcome.style.display = 'none';
+// Render messages
       let existingMsgs = chat.querySelectorAll('.prem-msg');
       existingMsgs.forEach(m => m.remove());
       premMessages.forEach(msg => {
