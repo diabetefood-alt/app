@@ -1963,6 +1963,16 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 .btn-unlock-premium { background: linear-gradient(135deg, #ff6b00, #ff8c00); color: #fff; border: none; border-radius: 25px; padding: 10px 24px; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(255,107,0,0.3); transition: transform 0.2s; }
 .btn-unlock-premium:active { transform: scale(0.95); }
 
+
+
+/* Install Banner */
+#install-banner { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+#install-banner.show { transform: translateY(0); }
+#install-banner .install-text { flex: 1; margin-right: 12px; }
+#install-banner .install-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
+#install-banner .install-text span { font-size: 12px; opacity: 0.9; }
+#install-banner .install-btn { background: #fff; color: #764ba2; border: none; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+#install-banner .install-close { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0 0 0 12px; opacity: 0.7; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -3216,6 +3226,60 @@ function saveAlertGoals(){var g={};var cv=document.getElementById('alert-input-c
 function getDayTotals(){var totals={carbs:0,cal:0,gi:0,giCount:0};try{var key='premChat_'+new Date().toDateString();var data=JSON.parse(localStorage.getItem(key))||[];data.forEach(function(m){if(m.role==='assistant'&&m.glucides){totals.carbs+=parseFloat(m.glucides)||0;totals.cal+=parseFloat(m.calories)||0;if(m.ig){totals.gi+=parseFloat(m.ig)||0;totals.giCount++}}})}catch(e){}try{var sumEl=document.getElementById('prem-summary');if(sumEl){var stats=sumEl.querySelectorAll('.prem-stat-value');if(stats.length>=3){var carbVal=parseInt(stats[0].textContent)||0;var calVal=parseInt(stats[1].textContent)||0;var giVal=parseInt(stats[2].textContent)||0;if(carbVal>0)totals.carbs=carbVal;if(calVal>0)totals.cal=calVal;if(giVal>0){totals.gi=giVal;totals.giCount=1}}}}catch(e){}return totals}
 function renderAlertGoals(){var goals=getAlertGoals();var container=document.getElementById('alert-goals');var noGoals=document.getElementById('alert-no-goals');if(!goals.maxCarbs&&!goals.maxCal&&!goals.maxGI){container.innerHTML='<div class="alert-no-goals">Appuyez sur Modifier pour d\u00e9finir vos objectifs</div>';return}var totals=getDayTotals();var html='';if(goals.maxCarbs){var pct=Math.min((totals.carbs/goals.maxCarbs)*100,100);var cls=pct<75?'ok':pct<100?'warn':'over';var barCls=pct<75?'green':pct<100?'orange':'red';var exceeded=totals.carbs>goals.maxCarbs;html+='<div class="alert-goal '+(exceeded?'exceeded':'ok')+'"><div class="alert-goal-top"><div class="alert-goal-label">Glucides / jour</div><div class="alert-goal-values"><b>'+Math.round(totals.carbs)+'g</b> / '+goals.maxCarbs+'g</div></div><div class="alert-bar-bg"><div class="alert-bar-fill '+barCls+'" style="width:'+pct+'%"></div></div><div class="alert-status '+cls+'">'+(exceeded?'\u26A0 D\u00e9pass\u00e9 de '+(Math.round(totals.carbs)-goals.maxCarbs)+'g':'\u2713 Dans la limite')+'</div></div>'}if(goals.maxCal){var pct2=Math.min((totals.cal/goals.maxCal)*100,100);var cls2=pct2<75?'ok':pct2<100?'warn':'over';var barCls2=pct2<75?'green':pct2<100?'orange':'red';var exceeded2=totals.cal>goals.maxCal;html+='<div class="alert-goal '+(exceeded2?'exceeded':'ok')+'"><div class="alert-goal-top"><div class="alert-goal-label">Calories / jour</div><div class="alert-goal-values"><b>'+Math.round(totals.cal)+'</b> / '+goals.maxCal+' kcal</div></div><div class="alert-bar-bg"><div class="alert-bar-fill '+barCls2+'" style="width:'+pct2+'%"></div></div><div class="alert-status '+cls2+'">'+(exceeded2?'\u26A0 D\u00e9pass\u00e9 de '+(Math.round(totals.cal)-goals.maxCal)+' kcal':'\u2713 Dans la limite')+'</div></div>'}if(goals.maxGI){var avgGI=totals.giCount>0?totals.gi/totals.giCount:totals.gi;var pct3=Math.min((avgGI/goals.maxGI)*100,100);var cls3=pct3<75?'ok':pct3<100?'warn':'over';var barCls3=pct3<75?'green':pct3<100?'orange':'red';var exceeded3=avgGI>goals.maxGI;html+='<div class="alert-goal '+(exceeded3?'exceeded':'ok')+'"><div class="alert-goal-top"><div class="alert-goal-label">IG moyen / repas</div><div class="alert-goal-values"><b>'+Math.round(avgGI)+'</b> / '+goals.maxGI+'</div></div><div class="alert-bar-bg"><div class="alert-bar-fill '+barCls3+'" style="width:'+pct3+'%"></div></div><div class="alert-status '+cls3+'">'+(exceeded3?'\u26A0 D\u00e9pass\u00e9':'\u2713 Dans la limite')+'</div></div>'}container.innerHTML=html}
 document.addEventListener('DOMContentLoaded',function(){setTimeout(renderAlertGoals,200)});
+
+
+/* PWA Install Banner */
+var _deferredPrompt = null;
+var _installBannerDismissed = false;
+
+function createInstallBanner() {
+  if (document.getElementById("install-banner")) return;
+  var div = document.createElement("div");
+  div.id = "install-banner";
+  div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre écran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
+  document.body.appendChild(div);
+  setTimeout(function(){ div.classList.add("show"); }, 300);
+}
+
+function doInstall() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(result) {
+    if (result.outcome === "accepted") {
+      try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+    }
+    hideInstallBanner();
+    _deferredPrompt = null;
+  });
+}
+
+function dismissInstall() {
+  _installBannerDismissed = true;
+  hideInstallBanner();
+  try { sessionStorage.setItem("install_dismissed", "1"); } catch(e) {}
+}
+
+function hideInstallBanner() {
+  var b = document.getElementById("install-banner");
+  if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); }, 500); }
+}
+
+window.addEventListener("beforeinstallprompt", function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  try {
+    if (localStorage.getItem("pwa_installed") === "1") return;
+    if (sessionStorage.getItem("install_dismissed") === "1") return;
+  } catch(ex) {}
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+  if (navigator.standalone === true) return;
+  setTimeout(createInstallBanner, 3000);
+});
+
+window.addEventListener("appinstalled", function() {
+  hideInstallBanner();
+  try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+});
 </script>
 </body>
 </html>
