@@ -164,6 +164,7 @@ if (welcome) welcome.style.display = 'none';
     async function premClearChat() {
       if (!confirm('Effacer toute la conversation ?')) return;
       premMessages.length = 0;
+    premDayTotals = {calories:0,glucides:0,proteines:0,lipides:0,ig_sum:0,ig_count:0,meals:[]};
       var today = new Date().toDateString();
       localStorage.removeItem('prem_messages_' + today); localStorage.removeItem('prem_totals_' + today);
       var chatEl = document.getElementById('prem-chat'); chatEl.querySelectorAll('.prem-msg').forEach(function(m){ m.remove(); }); var w = chatEl.querySelector('.prem-welcome'); if (w) w.style.display = '';
