@@ -517,21 +517,8 @@
   }
 
   /* VIDEO ZONE */
-  #scanner-container {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #000;
-    display: none;
-    overflow: hidden;
-    z-index: 9999;
-    opacity: 0;
-    transform: scale(1.04);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  #scanner-container.scanner-visible {
-    opacity: 1;
-    transform: scale(1);
-  }
+  #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; display: none; overflow: hidden; z-index: 9999; opacity: 0; transform: scale(0.92) translateY(30px); transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  #scanner-container.scanner-visible { opacity: 1; transform: scale(1) translateY(0); }
 
   /* Hide header & nav when scanner is active */
   body.scanner-active header,
@@ -2559,7 +2546,7 @@ function stopScanner() {
   setTimeout(() => {
     sc.style.display = 'none';
     document.getElementById('scanner-idle').style.display = 'block';
-  }, 300);
+  }, 500);
   document.body.style.overflow = '';
   document.body.classList.remove('scanner-active');
 }
