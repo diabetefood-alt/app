@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <script>
-// Force cache update v28
+// Force update v29 - unregister old SW and clear all caches
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(r) { r.update(); });
@@ -3175,7 +3175,7 @@ renderScanCounter();
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(function(reg){reg.update();reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='activated')window.location.reload();});});}).catch(function(){});
 }
 
     async function analyzeManual(barcode) {
