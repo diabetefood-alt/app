@@ -2434,91 +2434,58 @@ function updatePDFPreview() {
 
 function generatePDF() {
     if (!scanHistory || scanHistory.length === 0) {
-      alert('Aucun scan dans l\u2019historique. Scannez des produits d\u2019abord.');
+      alert("Aucun scan. Scannez des produits d'abord.");
       return;
     }
-
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const date = new Date().toLocaleDateString('fr-FR');
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // --- Header ---
-    doc.setFillColor(255, 107, 0);
-    doc.rect(0, 0, pageWidth, 32, 'F');
-    doc.setTextColor(255, 255, 255);
+    const date = new Date().toLocaleDateString("fr-FR");
+    const pw = doc.internal.pageSize.getWidth();
+    doc.setFillColor(255,107,0);
+    doc.rect(0,0,pw,32,"F");
+    doc.setTextColor(255,255,255);
     doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DiabeteFood', 14, 15);
+    doc.setFont("helvetica","bold");
+    doc.text("DiabeteFood",14,15);
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Rapport alimentaire du ' + date, 14, 24);
-
-    // --- Stats ---
-    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica","normal");
+    doc.text("Rapport alimentaire du "+date,14,24);
+    doc.setTextColor(60,60,60);
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Produits scann\u00e9s : ' + scanHistory.length, 14, 42);
-    const avgScore = (scanHistory.reduce(function(a, b) { return a + (b.score || 0); }, 0) / scanHistory.length).toFixed(1);
-    doc.text('Score moyen : ' + avgScore + ' / 10', 14, 50);
-
-    // --- Table header ---
-    let y = 62;
-    doc.setFillColor(255, 107, 0);
-    doc.rect(14, y - 5, pageWidth - 28, 9, 'F');
-    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica","bold");
+    doc.text("Produits : "+scanHistory.length,14,42);
+    var avg=(scanHistory.reduce(function(a,b){return a+(b.score||0);},0)/scanHistory.length).toFixed(1);
+    doc.text("Score moyen : "+avg+" / 10",14,50);
+    var y=62;
+    doc.setFillColor(255,107,0);
+    doc.rect(14,y-5,pw-28,9,"F");
+    doc.setTextColor(255,255,255);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Produit', 16, y);
-    doc.text('Score', 100, y);
-    doc.text('Glucides', 125, y);
-    doc.text('Sucres', 152, y);
-    doc.text('Verdict', 175, y);
-    y += 8;
-
-    // --- Table rows ---
-    doc.setFont('helvetica', 'normal');
-    scanHistory.forEach(function(item, index) {
-      if (y > 275) {
-        doc.addPage();
-        y = 20;
-      }
-
-      if (index % 2 === 0) {
-        doc.setFillColor(255, 248, 242);
-        doc.rect(14, y - 5, pageWidth - 28, 8, 'F');
-      }
-
-      doc.setTextColor(60, 60, 60);
-      var nom = (item.nom || 'Inconnu').substring(0, 30);
-      doc.text(nom, 16, y);
-      doc.text(String(item.score != null ? item.score : '-'), 104, y);
-      doc.text(String(item.glucide != null ? item.glucide + 'g' : '-'), 128, y);
-      doc.text(String(item.sucre != null ? item.sucre + 'g' : '-'), 155, y);
-
-      var verdict = item.verdict || '-';
-      if (verdict.toLowerCase().indexOf('bon') > -1 || verdict.toLowerCase().indexOf('adapt') > -1) {
-        doc.setTextColor(34, 139, 34);
-      } else if (verdict.toLowerCase().indexOf('mauvais') > -1 || verdict.toLowerCase().indexOf('\u00e9viter') > -1) {
-        doc.setTextColor(220, 20, 20);
-      } else {
-        doc.setTextColor(200, 140, 0);
-      }
-      doc.text(verdict.substring(0, 14), 175, y);
-      y += 8;
+    doc.text("Produit",16,y);
+    doc.text("Score",100,y);
+    doc.text("Glucides",125,y);
+    doc.text("Sucres",152,y);
+    doc.text("Verdict",175,y);
+    y+=8;
+    doc.setFont("helvetica","normal");
+    scanHistory.forEach(function(item,idx){
+      if(y>275){doc.addPage();y=20;}
+      if(idx%2===0){doc.setFillColor(255,248,242);doc.rect(14,y-5,pw-28,8,"F");}
+      doc.setTextColor(60,60,60);
+      doc.text((item.nom||"Inconnu").substring(0,30),16,y);
+      doc.text(String(item.score!=null?item.score:"-"),104,y);
+      doc.text(String(item.glucide!=null?item.glucide+"g":"-"),128,y);
+      doc.text(String(item.sucre!=null?item.sucre+"g":"-"),155,y);
+      var v=item.verdict||"-";
+      if(v.toLowerCase().indexOf("bon")>-1||v.toLowerCase().indexOf("adapt")>-1){doc.setTextColor(34,139,34);}
+      else if(v.toLowerCase().indexOf("mauvais")>-1||v.toLowerCase().indexOf("viter")>-1){doc.setTextColor(220,20,20);}
+      else{doc.setTextColor(200,140,0);}
+      doc.text(v.substring(0,14),175,y);
+      y+=8;
     });
-
-    // --- Footer ---
-    var pageCount = doc.internal.getNumberOfPages();
-    for (var p = 1; p <= pageCount; p++) {
-      doc.setPage(p);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text('G\u00e9n\u00e9r\u00e9 par DiabeteFood \u2014 ' + date, 14, 290);
-      doc.text('Page ' + p + '/' + pageCount, pageWidth - 30, 290);
-    }
-
-    doc.save('rapport-diabetefood-' + date.replace(/\//g, '-') + '.pdf');
+    var pc=doc.internal.getNumberOfPages();
+    for(var p=1;p<=pc;p++){doc.setPage(p);doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text("DiabeteFood - "+date,14,290);doc.text("Page "+p+"/"+pc,pw-30,290);}
+    doc.save("rapport-diabetefood-"+date.replace(/\//g,"-")+".pdf");
   }
 </style></head><body>
   <div class="header">
