@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diabetefood-v31';
+const CACHE_NAME = 'diabetefood-v32';
 const ASSETS = [
   '/app/',
   '/app/index.html',
@@ -6,12 +6,14 @@ const ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js'
 ];
 
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
+
 
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -21,6 +23,7 @@ self.addEventListener('activate', event => {
   );
   self.clients.claim();
 });
+
 
 self.addEventListener('fetch', event => {
   event.respondWith(
@@ -33,3 +36,4 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match(event.request))
   );
 });
+
