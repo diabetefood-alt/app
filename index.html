@@ -2531,11 +2531,32 @@ var _scannerCallback = null;
             });
             let lastCode = null, lastTime = 0;
             _scannerCallback = function(result) {
-                const code = result.codeResult.code;
-                const errors = result.codeResult.decodedCodes.filter(function(d){ return d.error !== undefined; }).map(function(d){ return d.error; });
-                const avgError = errors.length > 0 ? errors.reduce(function(s,e){ return s+e; }, 0) / errors.length : 1;
-                if (avgError > 0.25) return;
-                const now = Date.now();
+                var code = result.codeResult.code;
+                var format = result.codeResult.format;
+                var errors = result.codeResult.decodedCodes.filter(function(d){ return d.error !== undefined; }).map(function(d){ return d.error; });
+                var avgError = errors.length > 0 ? errors.reduce(function(s,e){ return s+e; }, 0) / errors.length : 1;
+                if (avgError > 0.20) return;
+                if (!code || !/^\d+$/.test(code)) return;
+                var validLengths = [8, 12, 13];
+                if (validLengths.indexOf(code.length) === -1) return;
+                var sum = 0;
+                if (code.length === 13 || code.length === 8) {
+                    for (var i = 0; i < code.length - 1; i++) {
+                        var digit = parseInt(code[i], 10);
+                        sum += (i % 2 === 0) ? digit : digit * 3;
+                    }
+                    var checkDigit = (10 - (sum % 10)) % 10;
+                    if (checkDigit !== parseInt(code[code.length - 1], 10)) return;
+                }
+                if (code.length === 12) {
+                    for (var j = 0; j < 11; j++) {
+                        var d = parseInt(code[j], 10);
+                        sum += (j % 2 === 0) ? d * 3 : d;
+                    }
+                    var check = (10 - (sum % 10)) % 10;
+                    if (check !== parseInt(code[11], 10)) return;
+                }
+                var now = Date.now();
                 if (code === lastCode && now - lastTime < 3000) return;
                 lastCode = code;
                 lastTime = now;
