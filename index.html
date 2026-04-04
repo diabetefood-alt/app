@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DiabeteFood — Scanner Alimentaire</title>
@@ -2014,7 +2013,6 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
         <div class="scanner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="15" y1="8" x2="15" y2="12"/><line x1="19" y1="8" x2="19" y2="16"/><line x1="3" y1="8" x2="3" y2="16"/></svg></div>
         <h2>Scanner un code-barres</h2>
       </div>
-          
 
       <!-- Idle state -->
       <div class="scanner-idle" id="scanner-idle">
@@ -2523,15 +2521,119 @@ function selectType(t) {
 }
 
 // ─── BARCODE SCANNER ──────────────────────────────────────────────────────────
-function startScanner() { if (!canScan()) { showPremiumPopup(); return; } const container = document.getElementById('scanner-container'); const idle = document.getElementById('scanner-idle'); container.style.display = 'block'; idle.style.display = 'none'; document.body.style.overflow = 'hidden'; document.body.classList.add('scanner-active'); requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); }); Quagga.init({ inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}} }, decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] }, locate: true }, err => { if (err) { showError("Impossible d\'accéder à la caméra"); stopScanner(); return; } Quagga.start(); scannerActive = true; }); let lastCode = null, lastTime = 0; Quagga.onDetected(result => { const code = result.codeResult.code; const now = Date.now(); if (code === lastCode && now - lastTime < 3000) return; lastCode = code; lastTime = now; stopScanner(); document.getElementById('barcode-input').value = code; analyzeBarcode(code); }); }
+function startScanner() {
+  if (!canScan()) { showPremiumPopup(); return; }
+  const container = document.getElementById('scanner-container');
+  const idle = document.getElementById('scanner-idle');
+  container.style.display = 'block';
+  idle.style.display = 'none';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('scanner-active');
+  // Smooth fade-in animation
+  requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); });
+  Quagga.init({
+    inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}} },
+    decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] },
+    locate: true
+  }, err => {
+    if (err) { showError("Impossible d'accéder à la caméra"); stopScanner(); return; }
+    Quagga.start(); scannerActive = true;
+  });
+  let lastCode = null, lastTime = 0;
+  Quagga.onDetected(result => {
+    const code = result.codeResult.code;
+    const now = Date.now();
+    if (code === lastCode && now - lastTime < 3000) return;
+    lastCode = code; lastTime = now;
+    stopScanner();
+    document.getElementById('barcode-input').value = code;
+    analyzeBarcode(code);
+  });
+}
 
-function stopScanner() { if (!scannerActive) return; Quagga.stop(); scannerActive = false; const sc = document.getElementById('scanner-container'); sc.classList.remove('scanner-visible'); setTimeout(() => { sc.style.display = 'none'; document.getElementById('scanner-idle').style.display = 'block'; }, 300); document.body.style.overflow = ''; document.body.classList.remove('scanner-active'); }
+function stopScanner() {
+  if (!scannerActive) return;
+  Quagga.stop(); scannerActive = false;
+  const sc = document.getElementById('scanner-container');
+  sc.classList.remove('scanner-visible');
+  setTimeout(() => {
+    sc.style.display = 'none';
+    document.getElementById('scanner-idle').style.display = 'block';
+  }, 300);
+  document.body.style.overflow = '';
+  document.body.classList.remove('scanner-active');
+}
 
-async function fetchProductInfo(barcode) { const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`; try { const r = await fetch(url); const d = await r.json(); if (d.status === 1) return d.product; } catch(e) {} return null; }
+// ─── OPEN FOOD FACTS ──────────────────────────────────────────────────────────
+async function fetchProductInfo(barcode) {
+  const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+  try { const r = await fetch(url); const d = await r.json(); if (d.status === 1) return d.product; } catch(e) {}
+  return null;
+}
 
-function createMascotSVG(mood, size) { size = size || 100; var ns = "http://www.w3.org/2000/svg"; var svg = document.createElementNS(ns, "svg"); svg.setAttribute("width", size); svg.setAttribute("height", size); svg.setAttribute("viewBox", "0 0 120 120"); function el(tag, attrs) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; } el("circle", {cx:60,cy:62,r:45,fill:"#F5923A"}); el("ellipse", {cx:45,cy:42,rx:15,ry:12,fill:"white",opacity:"0.2",transform:"rotate(-20,45,42)"}); el("rect", {x:56,y:10,width:8,height:14,rx:4,fill:"#6AAF4B"}); el("ellipse", {cx:72,cy:18,rx:12,ry:7,fill:"#6AAF4B",transform:"rotate(25,72,18)"}); if (mood === "happy") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:53,r:2,fill:"white"});el("circle",{cx:79,cy:53,r:2,fill:"white"}); el("path",{d:"M40 72Q60 90 80 72",stroke:"#2D1B0E","stroke-width":"3",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:34,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"}); el("ellipse",{cx:86,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"}); } else if (mood === "neutral") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:54,r:2,fill:"white"});el("circle",{cx:79,cy:54,r:2,fill:"white"}); el("path",{d:"M44 74Q60 78 76 74",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); } else if (mood === "worried") { el("ellipse",{cx:44,cy:53,rx:8,ry:9,fill:"white"});el("ellipse",{cx:76,cy:53,rx:8,ry:9,fill:"white"}); el("ellipse",{cx:44,cy:55,rx:5,ry:6,fill:"#2D1B0E"});el("ellipse",{cx:76,cy:55,rx:5,ry:6,fill:"#2D1B0E"}); el("circle",{cx:46,cy:52,r:2.5,fill:"white"});el("circle",{cx:78,cy:52,r:2.5,fill:"white"}); el("line",{x1:36,y1:40,x2:50,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"}); el("line",{x1:84,y1:40,x2:70,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"}); el("path",{d:"M42 78Q60 68 78 78",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:92,cy:42,rx:4,ry:6,fill:"#87CEEB",opacity:"0.7"}); } else if (mood === "scan") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:52,r:2,fill:"white"});el("circle",{cx:79,cy:52,r:2,fill:"white"}); el("path",{d:"M42 70Q60 88 78 70",stroke:"#2D1B0E","stroke-width":"2.5",fill:"#C0392B","stroke-linecap":"round"}); el("ellipse",{cx:60,cy:79,rx:8,ry:5,fill:"#E74C3C"}); el("ellipse",{cx:34,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"}); el("ellipse",{cx:86,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"}); } else if (mood === "loading") { el("path",{d:"M37 56Q44 50 51 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("path",{d:"M69 56Q76 50 83 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:60,cy:75,rx:5,ry:4,fill:"#2D1B0E"}); var d1=el("circle",{cx:90,cy:35,r:3,fill:"#E8721A",opacity:"0.6"}); var a1=document.createElementNS(ns,"animate");a1.setAttribute("attributeName","opacity");a1.setAttribute("values","0.2;1;0.2");a1.setAttribute("dur","1.5s");a1.setAttribute("repeatCount","indefinite");a1.setAttribute("begin","0s");d1.appendChild(a1); var d2=el("circle",{cx:100,cy:28,r:4,fill:"#E8721A",opacity:"0.6"}); var a2=document.createElementNS(ns,"animate");a2.setAttribute("attributeName","opacity");a2.setAttribute("values","0.2;1;0.2");a2.setAttribute("dur","1.5s");a2.setAttribute("repeatCount","indefinite");a2.setAttribute("begin","0.3s");d2.appendChild(a2); var d3=el("circle",{cx:112,cy:20,r:5,fill:"#E8721A",opacity:"0.6"}); var a3=document.createElementNS(ns,"animate");a3.setAttribute("attributeName","opacity");a3.setAttribute("values","0.2;1;0.2");a3.setAttribute("dur","1.5s");a3.setAttribute("repeatCount","indefinite");a3.setAttribute("begin","0.6s");d3.appendChild(a3); } return svg; }
-
-// ─── MAIN ANALYSIS ──────────────────────────────────────────────────────────── async function analyzeBarcode(barcode) {
+// ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
+// === MASCOT ORANGE KAWAII ===
+function createMascotSVG(mood, size) {
+  size = size || 100;
+  var ns = "http://www.w3.org/2000/svg";
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width", size);
+  svg.setAttribute("height", size);
+  svg.setAttribute("viewBox", "0 0 120 120");
+  function el(tag, attrs) {
+    var e = document.createElementNS(ns, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    svg.appendChild(e);
+    return e;
+  }
+  // Body
+  el("circle", {cx:60,cy:62,r:45,fill:"#F5923A"});
+  el("ellipse", {cx:45,cy:42,rx:15,ry:12,fill:"white",opacity:"0.2",transform:"rotate(-20,45,42)"});
+  // Leaf
+  el("rect", {x:56,y:10,width:8,height:14,rx:4,fill:"#6AAF4B"});
+  el("ellipse", {cx:72,cy:18,rx:12,ry:7,fill:"#6AAF4B",transform:"rotate(25,72,18)"});
+  if (mood === "happy") {
+    el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"});
+    el("ellipse",{cx:45,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"});
+    el("circle",{cx:47,cy:53,r:2,fill:"white"});el("circle",{cx:79,cy:53,r:2,fill:"white"});
+    el("path",{d:"M40 72Q60 90 80 72",stroke:"#2D1B0E","stroke-width":"3",fill:"none","stroke-linecap":"round"});
+    el("ellipse",{cx:34,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"});
+    el("ellipse",{cx:86,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"});
+  } else if (mood === "neutral") {
+    el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"});
+    el("ellipse",{cx:45,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"});
+    el("circle",{cx:47,cy:54,r:2,fill:"white"});el("circle",{cx:79,cy:54,r:2,fill:"white"});
+    el("path",{d:"M44 74Q60 78 76 74",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"});
+  } else if (mood === "worried") {
+    el("ellipse",{cx:44,cy:53,rx:8,ry:9,fill:"white"});el("ellipse",{cx:76,cy:53,rx:8,ry:9,fill:"white"});
+    el("ellipse",{cx:44,cy:55,rx:5,ry:6,fill:"#2D1B0E"});el("ellipse",{cx:76,cy:55,rx:5,ry:6,fill:"#2D1B0E"});
+    el("circle",{cx:46,cy:52,r:2.5,fill:"white"});el("circle",{cx:78,cy:52,r:2.5,fill:"white"});
+    el("line",{x1:36,y1:40,x2:50,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"});
+    el("line",{x1:84,y1:40,x2:70,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"});
+    el("path",{d:"M42 78Q60 68 78 78",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"});
+    el("ellipse",{cx:92,cy:42,rx:4,ry:6,fill:"#87CEEB",opacity:"0.7"});
+  } else if (mood === "scan") {
+    el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"});
+    el("ellipse",{cx:45,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"});
+    el("circle",{cx:47,cy:52,r:2,fill:"white"});el("circle",{cx:79,cy:52,r:2,fill:"white"});
+    el("path",{d:"M42 70Q60 88 78 70",stroke:"#2D1B0E","stroke-width":"2.5",fill:"#C0392B","stroke-linecap":"round"});
+    el("ellipse",{cx:60,cy:79,rx:8,ry:5,fill:"#E74C3C"});
+    el("ellipse",{cx:34,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"});
+    el("ellipse",{cx:86,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"});
+  } else if (mood === "loading") {
+    el("path",{d:"M37 56Q44 50 51 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"});
+    el("path",{d:"M69 56Q76 50 83 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"});
+    el("ellipse",{cx:60,cy:75,rx:5,ry:4,fill:"#2D1B0E"});
+    var d1=el("circle",{cx:90,cy:35,r:3,fill:"#E8721A",opacity:"0.6"});
+    var a1=document.createElementNS(ns,"animate");a1.setAttribute("attributeName","opacity");a1.setAttribute("values","0.2;1;0.2");a1.setAttribute("dur","1.5s");a1.setAttribute("repeatCount","indefinite");a1.setAttribute("begin","0s");d1.appendChild(a1);
+    var d2=el("circle",{cx:100,cy:28,r:4,fill:"#E8721A",opacity:"0.6"});
+    var a2=document.createElementNS(ns,"animate");a2.setAttribute("attributeName","opacity");a2.setAttribute("values","0.2;1;0.2");a2.setAttribute("dur","1.5s");a2.setAttribute("repeatCount","indefinite");a2.setAttribute("begin","0.3s");d2.appendChild(a2);
+    var d3=el("circle",{cx:112,cy:20,r:5,fill:"#E8721A",opacity:"0.6"});
+    var a3=document.createElementNS(ns,"animate");a3.setAttribute("attributeName","opacity");a3.setAttribute("values","0.2;1;0.2");a3.setAttribute("dur","1.5s");a3.setAttribute("repeatCount","indefinite");a3.setAttribute("begin","0.6s");d3.appendChild(a3);
+  }
+  return svg;
+}
+async function analyzeBarcode(barcode) {
   barcode = String(barcode).trim();
   if (!barcode || barcode.length < 4) { showError("Code-barres invalide"); return; }
   if (!canScan()) { showPremiumPopup(); return; }
