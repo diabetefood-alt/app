@@ -335,7 +335,14 @@
         if(logoData){try{doc.addImage(logoData,'PNG',96,283,8,8);}catch(e){}}
         doc.text('DiabeteFood - Rapport g\u00e9n\u00e9r\u00e9 le '+today.toLocaleDateString('fr-FR'),105,295,{align:'center'});
         doc.text('Ce rapport est fourni \u00e0 titre informatif. Consultez votre diab\u00e9tologue.',105,299,{align:'center'});}
-      doc.save('DiabeteFood_Rapport_'+today.toISOString().split('T')[0]+'.pdf');
+      var pdfFileName = 'DiabeteFood_Rapport_'+today.toISOString().split('T')[0]+'.pdf';
+    if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      var pdfBlob = doc.output('blob');
+      var pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
+      navigator.share({ title: 'Rapport DiabeteFood', files: [pdfFile] }).catch(function() { doc.save(pdfFileName); });
+    } else {
+      doc.save(pdfFileName);
+    }
     }
 
 
