@@ -2579,11 +2579,39 @@ var _scannerCallback = null;
         }
 
 // ─── OPEN FOOD FACTS ──────────────────────────────────────────────────────────
-async function fetchProductInfo(barcode) {
-  const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
-  try { const r = await fetch(url); const d = await r.json(); if (d.status === 1) return d.product; } catch(e) {}
-  return null;
-}
+var _productCache = {};
+        async function fetchProductInfo(barcode) {
+            if (_productCache[barcode]) return _productCache[barcode];
+            try {
+                var cached = localStorage.getItem('off_' + barcode);
+                if (cached) {
+                    var parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.ts < 86400000) {
+                        _productCache[barcode] = parsed.data;
+                        return parsed.data;
+                    }
+                }
+            } catch(e) {}
+            var url = 'https://world.openfoodfacts.org/api/v0/product/' + barcode + '.json';
+            for (var attempt = 0; attempt < 3; attempt++) {
+                try {
+                    var controller = new AbortController();
+                    var timer = setTimeout(function(){ controller.abort(); }, 15000);
+                    var r = await fetch(url, { signal: controller.signal });
+                    clearTimeout(timer);
+                    var d = await r.json();
+                    if (d.status === 1) {
+                        _productCache[barcode] = d.product;
+                        try { localStorage.setItem('off_' + barcode, JSON.stringify({ ts: Date.now(), data: d.product })); } catch(e) {}
+                        return d.product;
+                    }
+                    return null;
+                } catch(e) {
+                    if (attempt < 2) { await new Promise(function(ok){ setTimeout(ok, 1000 * (attempt + 1)); }); }
+                }
+            }
+            return null;
+        }
 
 // ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
 // === MASCOT ORANGE KAWAII ===
