@@ -1,7 +1,7 @@
 {
-  "name": "DiabeteFood — Scanner Alimentaire",
+  "name": "DiabeteFood \u2014 Scanner Alimentaire",
   "short_name": "DiabeteFood",
-  "description": "Scannez les codes-barres alimentaires et obtenez une analyse adaptée au diabète de type 1 et type 2.",
+  "description": "Scannez les codes-barres alimentaires et obtenez une analyse adapt\u00e9e au diab\u00e8te de type 1 et type 2.",
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
@@ -9,11 +9,7 @@
   "background_color": "#fff8f2",
   "theme_color": "#ff6b00",
   "lang": "fr",
-  "categories": [
-    "health",
-    "food",
-    "medical"
-  ],
+  "categories": ["health", "food", "medical"],
   "icons": [
     {
       "src": "/app/icon-192.png",
