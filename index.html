@@ -194,7 +194,7 @@
       box.innerHTML = '<span style="color:#16a34a;font-size:13px;">\u2705 Corrig\u00e9 : ' + newName + '</span>';
     }
 
-    function premHandlePhoto(event) {
+    async function premHandlePhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
       const base64 = await compressImage(file, 1024);
