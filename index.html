@@ -1,19 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<script>
-// Force update v29 - unregister old SW and clear all caches
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(r) { r.update(); });
-  });
-  caches.keys().then(function(names) {
-    names.forEach(function(name) {
-      if (name !== 'diabetefood-v30') caches.delete(name);
-    });
-  });
-}
-</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DiabeteFood — Scanner Alimentaire</title>
@@ -2026,13 +2014,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
         <div class="scanner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="15" y1="8" x2="15" y2="12"/><line x1="19" y1="8" x2="19" y2="16"/><line x1="3" y1="8" x2="3" y2="16"/></svg></div>
         <h2>Scanner un code-barres</h2>
       </div>
-          <div style="text-align:center;padding:12px 20px 0;">
-            <button class="scan-btn" onclick="startScanner()" style="width:100%;padding:14px 24px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#FF6B00,#F5923A);border:none;border-radius:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
-              Activer le scanner
-            </button>
-            <p style="font-size:10px;color:#ccc;margin-top:6px;">v30</p>
-          </div>
+          
 
       <!-- Idle state -->
       <div class="scanner-idle" id="scanner-idle">
@@ -2541,230 +2523,15 @@ function selectType(t) {
 }
 
 // ─── BARCODE SCANNER ──────────────────────────────────────────────────────────
-let _nativeDetector = null;
-let _nativeScanInterval = null;
-let _scanVideoStream = null;
+function startScanner() { if (!canScan()) { showPremiumPopup(); return; } const container = document.getElementById('scanner-container'); const idle = document.getElementById('scanner-idle'); container.style.display = 'block'; idle.style.display = 'none'; document.body.style.overflow = 'hidden'; document.body.classList.add('scanner-active'); requestAnimationFrame(() => { requestAnimationFrame(() => { container.classList.add('scanner-visible'); }); }); Quagga.init({ inputStream: { name:"Live", type:"LiveStream", target:container, constraints:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}} }, decoder: { readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] }, locate: true }, err => { if (err) { showError("Impossible d\'accéder à la caméra"); stopScanner(); return; } Quagga.start(); scannerActive = true; }); let lastCode = null, lastTime = 0; Quagga.onDetected(result => { const code = result.codeResult.code; const now = Date.now(); if (code === lastCode && now - lastTime < 3000) return; lastCode = code; lastTime = now; stopScanner(); document.getElementById('barcode-input').value = code; analyzeBarcode(code); }); }
 
-function _hasNativeDetector() {
-  return ('BarcodeDetector' in window);
-}
+function stopScanner() { if (!scannerActive) return; Quagga.stop(); scannerActive = false; const sc = document.getElementById('scanner-container'); sc.classList.remove('scanner-visible'); setTimeout(() => { sc.style.display = 'none'; document.getElementById('scanner-idle').style.display = 'block'; }, 300); document.body.style.overflow = ''; document.body.classList.remove('scanner-active'); }
 
-async function _initNativeDetector() {
-  if (!_hasNativeDetector()) return false;
-  try {
-    const formats = await BarcodeDetector.getSupportedFormats();
-    const needed = ['ean_13','ean_8','upc_a','upc_e','code_128'].filter(f => formats.includes(f));
-    if (needed.length === 0) return false;
-    _nativeDetector = new BarcodeDetector({ formats: needed });
-    return true;
-  } catch(e) { return false; }
-}
-
-async function startScanner() {
-  if (!canScan()) { showPremiumPopup(); return; }
-  const container = document.getElementById('scanner-container');
-  const idle = document.getElementById('scanner-idle');
-  container.style.display = 'block';
-  idle.style.display = 'none';
-  document.body.style.overflow = 'hidden';
-
-  const useNative = await _initNativeDetector();
-
-  if (useNative) {
-    // ── Mode natif : ultra rapide comme Yuka ──
-    try {
-      _scanVideoStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          focusMode: { ideal: 'continuous' },
-          zoom: { ideal: 1.5 }
-        }
-      });
-      let video = container.querySelector('video');
-      if (!video) {
-        video = document.createElement('video');
-        video.setAttribute('playsinline', '');
-        video.setAttribute('autoplay', '');
-        video.setAttribute('muted', '');
-        video.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-        container.innerHTML = '';
-        container.appendChild(video);
-      }
-      video.srcObject = _scanVideoStream;
-      await video.play();
-      scannerActive = true;
-
-      let lastCode = null, confirmCode = null, confirmCount = 0;
-      // Scan toutes les 100ms (10 fois/seconde) pour detection instantanee
-      _nativeScanInterval = setInterval(async () => {
-        if (!scannerActive) return;
-        try {
-          const barcodes = await _nativeDetector.detect(video);
-          if (barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
-            if (!code || code.length < 4) return;
-            // Confirmation rapide : 2 lectures identiques = code valide
-            if (code === confirmCode) {
-              confirmCount++;
-              if (confirmCount >= 2 && code !== lastCode) {
-                lastCode = code;
-                confirmCount = 0;
-                // Vibration feedback
-                if (navigator.vibrate) navigator.vibrate(100);
-                stopScanner();
-                document.getElementById('barcode-input').value = code;
-                document.getElementById('barcode-input-idle').value = code;
-                analyzeBarcode(code);
-              }
-            } else {
-              confirmCode = code;
-              confirmCount = 1;
-            }
-          }
-        } catch(e) {}
-      }, 100);
-    } catch(e) {
-      // Fallback vers Quagga si la camera echoue
-      _startQuaggaScanner(container);
-    }
-  } else {
-    // ── Mode Quagga ameliore ──
-    _startQuaggaScanner(container);
-  }
-}
-
-function _startQuaggaScanner(container) {
-  Quagga.init({
-    inputStream: {
-      name: "Live",
-      type: "LiveStream",
-      target: container,
-      constraints: {
-        facingMode: "environment",
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
-    },
-    decoder: {
-      readers: ["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"],
-      multiple: false
-    },
-    locate: true,
-    frequency: 15,
-    locator: {
-      patchSize: "medium",
-      halfSample: true
-    }
-  }, err => {
-    if (err) { showError("Impossible d'accéder à la caméra"); stopScanner(); return; }
-    Quagga.start();
-    scannerActive = true;
-  });
-  let lastCode = null, lastTime = 0;
-  let confirmCode = null, confirmCount = 0;
-  Quagga.offDetected();
-  Quagga.onDetected(result => {
-    const code = result.codeResult.code;
-    if (!code || code.length < 4) return;
-    // Confirmation : 2 lectures identiques pour eviter les faux positifs
-    if (code === confirmCode) {
-      confirmCount++;
-      if (confirmCount >= 2) {
-        const now = Date.now();
-        if (code === lastCode && now - lastTime < 3000) return;
-        lastCode = code; lastTime = now;
-        confirmCount = 0;
-        if (navigator.vibrate) navigator.vibrate(100);
-        stopScanner();
-        document.getElementById('barcode-input').value = code;
-        document.getElementById('barcode-input-idle').value = code;
-        analyzeBarcode(code);
-      }
-    } else {
-      confirmCode = code;
-      confirmCount = 1;
-    }
-  });
-}
-
-function stopScanner() {
-  if (!scannerActive) return;
-  // Arreter le scan natif si actif
-  if (_nativeScanInterval) {
-    clearInterval(_nativeScanInterval);
-    _nativeScanInterval = null;
-  }
-  if (_scanVideoStream) {
-    _scanVideoStream.getTracks().forEach(t => t.stop());
-    _scanVideoStream = null;
-  }
-  // Arreter Quagga si actif
-  try { Quagga.stop(); } catch(e) {}
-  scannerActive = false;
-  document.getElementById('scanner-container').style.display = 'none';
-  document.getElementById('scanner-idle').style.display = 'block';
-  document.body.style.overflow = '';
-}
-
-// ─── OPEN FOOD FACTS (avec retry + fallback + cache) ─────────────────────────
-const _productCache = {};
-
-async function _fetchWithTimeout(url, timeout = 5000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  try {
-    const r = await fetch(url, { signal: controller.signal });
-    clearTimeout(id);
-    return r;
-  } catch(e) {
-    clearTimeout(id);
-    throw e;
-  }
-}
-
-async function fetchProductInfo(barcode) {
-  // Verifier le cache d'abord (evite les appels reseau inutiles)
-  if (_productCache[barcode]) return _productCache[barcode];
-
-  // Liste de serveurs Open Food Facts (fallback si un serveur repond pas)
-  const servers = [
-    `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
-    `https://fr.openfoodfacts.org/api/v0/product/${barcode}.json`
-  ];
-
-  // 3 tentatives max avec les differents serveurs
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const url = servers[attempt % servers.length];
-    try {
-      const r = await _fetchWithTimeout(url, 5000);
-      const d = await r.json();
-      if (d.status === 1 && d.product) {
-        _productCache[barcode] = d.product;
-        return d.product;
-      }
-      // Si status !== 1, le produit existe pas dans la base, pas besoin de retry
-      if (d.status === 0) {
-        _productCache[barcode] = null;
-        return null;
-      }
-    } catch(e) {
-      // Timeout ou erreur reseau, on retry avec le serveur suivant
-      if (attempt < 2) {
-        await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
-        continue;
-      }
-    }
-  }
-  return null;
-}
-
+async function fetchProductInfo(barcode) { const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`; try { const r = await fetch(url); const d = await r.json(); if (d.status === 1) return d.product; } catch(e) {} return null; }
 
 function createMascotSVG(mood, size) { size = size || 100; var ns = "http://www.w3.org/2000/svg"; var svg = document.createElementNS(ns, "svg"); svg.setAttribute("width", size); svg.setAttribute("height", size); svg.setAttribute("viewBox", "0 0 120 120"); function el(tag, attrs) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; } el("circle", {cx:60,cy:62,r:45,fill:"#F5923A"}); el("ellipse", {cx:45,cy:42,rx:15,ry:12,fill:"white",opacity:"0.2",transform:"rotate(-20,45,42)"}); el("rect", {x:56,y:10,width:8,height:14,rx:4,fill:"#6AAF4B"}); el("ellipse", {cx:72,cy:18,rx:12,ry:7,fill:"#6AAF4B",transform:"rotate(25,72,18)"}); if (mood === "happy") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:56,rx:4.5,ry:5.5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:53,r:2,fill:"white"});el("circle",{cx:79,cy:53,r:2,fill:"white"}); el("path",{d:"M40 72Q60 90 80 72",stroke:"#2D1B0E","stroke-width":"3",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:34,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"}); el("ellipse",{cx:86,cy:72,rx:8,ry:5,fill:"#E8721A",opacity:"0.4"}); } else if (mood === "neutral") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:57,rx:4.5,ry:5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:54,r:2,fill:"white"});el("circle",{cx:79,cy:54,r:2,fill:"white"}); el("path",{d:"M44 74Q60 78 76 74",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); } else if (mood === "worried") { el("ellipse",{cx:44,cy:53,rx:8,ry:9,fill:"white"});el("ellipse",{cx:76,cy:53,rx:8,ry:9,fill:"white"}); el("ellipse",{cx:44,cy:55,rx:5,ry:6,fill:"#2D1B0E"});el("ellipse",{cx:76,cy:55,rx:5,ry:6,fill:"#2D1B0E"}); el("circle",{cx:46,cy:52,r:2.5,fill:"white"});el("circle",{cx:78,cy:52,r:2.5,fill:"white"}); el("line",{x1:36,y1:40,x2:50,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"}); el("line",{x1:84,y1:40,x2:70,y2:43,stroke:"#2D1B0E","stroke-width":"2.5","stroke-linecap":"round"}); el("path",{d:"M42 78Q60 68 78 78",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:92,cy:42,rx:4,ry:6,fill:"#87CEEB",opacity:"0.7"}); } else if (mood === "scan") { el("ellipse",{cx:44,cy:55,rx:7,ry:8,fill:"white"});el("ellipse",{cx:76,cy:55,rx:7,ry:8,fill:"white"}); el("ellipse",{cx:45,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"});el("ellipse",{cx:77,cy:55,rx:4.5,ry:5.5,fill:"#2D1B0E"}); el("circle",{cx:47,cy:52,r:2,fill:"white"});el("circle",{cx:79,cy:52,r:2,fill:"white"}); el("path",{d:"M42 70Q60 88 78 70",stroke:"#2D1B0E","stroke-width":"2.5",fill:"#C0392B","stroke-linecap":"round"}); el("ellipse",{cx:60,cy:79,rx:8,ry:5,fill:"#E74C3C"}); el("ellipse",{cx:34,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"}); el("ellipse",{cx:86,cy:70,rx:7,ry:4,fill:"#E8721A",opacity:"0.4"}); } else if (mood === "loading") { el("path",{d:"M37 56Q44 50 51 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("path",{d:"M69 56Q76 50 83 56",stroke:"#2D1B0E","stroke-width":"2.5",fill:"none","stroke-linecap":"round"}); el("ellipse",{cx:60,cy:75,rx:5,ry:4,fill:"#2D1B0E"}); var d1=el("circle",{cx:90,cy:35,r:3,fill:"#E8721A",opacity:"0.6"}); var a1=document.createElementNS(ns,"animate");a1.setAttribute("attributeName","opacity");a1.setAttribute("values","0.2;1;0.2");a1.setAttribute("dur","1.5s");a1.setAttribute("repeatCount","indefinite");a1.setAttribute("begin","0s");d1.appendChild(a1); var d2=el("circle",{cx:100,cy:28,r:4,fill:"#E8721A",opacity:"0.6"}); var a2=document.createElementNS(ns,"animate");a2.setAttribute("attributeName","opacity");a2.setAttribute("values","0.2;1;0.2");a2.setAttribute("dur","1.5s");a2.setAttribute("repeatCount","indefinite");a2.setAttribute("begin","0.3s");d2.appendChild(a2); var d3=el("circle",{cx:112,cy:20,r:5,fill:"#E8721A",opacity:"0.6"}); var a3=document.createElementNS(ns,"animate");a3.setAttribute("attributeName","opacity");a3.setAttribute("values","0.2;1;0.2");a3.setAttribute("dur","1.5s");a3.setAttribute("repeatCount","indefinite");a3.setAttribute("begin","0.6s");d3.appendChild(a3); } return svg; }
 
-// ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
-async function analyzeBarcode(barcode) {
+// ─── MAIN ANALYSIS ──────────────────────────────────────────────────────────── async function analyzeBarcode(barcode) {
   barcode = String(barcode).trim();
   if (!barcode || barcode.length < 4) { showError("Code-barres invalide"); return; }
   if (!canScan()) { showPremiumPopup(); return; }
@@ -3182,7 +2949,7 @@ renderScanCounter();
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(function(reg){reg.update();reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='activated')window.location.reload();});});}).catch(function(){});
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
     async function analyzeManual(barcode) {
