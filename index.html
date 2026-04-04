@@ -3234,25 +3234,25 @@ var _deferredPrompt = null;
 var _installBannerShown = false;
 
 function createInstallBanner(mode) {
-  if (_installBannerShown) return;
-  if (document.getElementById("install-banner")) return;
   if (window.matchMedia("(display-mode: standalone)").matches) return;
   if (navigator.standalone === true) return;
   try {
     if (localStorage.getItem("pwa_installed") === "1") return;
     if (sessionStorage.getItem("install_dismissed") === "1") return;
   } catch(e) {}
+  var existing = document.getElementById("install-banner");
+  if (existing) existing.remove();
   _installBannerShown = true;
   var div = document.createElement("div");
   div.id = "install-banner";
-  if (mode === "native") {
+  if (mode === "native" && _deferredPrompt) {
     div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre ecran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
   } else {
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS) {
-      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Appuyez sur <b>Partager</b> puis <b>Sur l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
+      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Appuyez sur Partager puis <b>Sur l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
     } else {
-      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Menu &#8942; puis <b>Ajouter a l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
+      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Menu &#8942; en haut puis <b>Ajouter a l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
     }
   }
   document.body.appendChild(div);
@@ -3284,7 +3284,12 @@ function hideInstallBanner() {
 window.addEventListener("beforeinstallprompt", function(e) {
   e.preventDefault();
   _deferredPrompt = e;
-  createInstallBanner("native");
+  /* Si le bandeau manuel est deja visible, on le remplace par le natif */
+  if (_installBannerShown) {
+    createInstallBanner("native");
+  } else {
+    createInstallBanner("native");
+  }
 });
 
 window.addEventListener("appinstalled", function() {
@@ -3293,8 +3298,8 @@ window.addEventListener("appinstalled", function() {
 });
 
 /* Fallback: si beforeinstallprompt ne se declenche pas apres 5s, instructions manuelles */
-if (document.readyState === "complete") { setTimeout(function(){ if (!_deferredPrompt) createInstallBanner("manual"); }, 5000); }
-else { window.addEventListener("load", function(){ setTimeout(function(){ if (!_deferredPrompt) createInstallBanner("manual"); }, 5000); }); }
+if (document.readyState === "complete") { setTimeout(function(){ if (!_deferredPrompt && !_installBannerShown) createInstallBanner("manual"); }, 5000); }
+else { window.addEventListener("load", function(){ setTimeout(function(){ if (!_deferredPrompt && !_installBannerShown) createInstallBanner("manual"); }, 5000); }); }
 
 </script>
 </body>
