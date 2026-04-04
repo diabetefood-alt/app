@@ -336,13 +336,52 @@
         doc.text('DiabeteFood - Rapport g\u00e9n\u00e9r\u00e9 le '+today.toLocaleDateString('fr-FR'),105,295,{align:'center'});
         doc.text('Ce rapport est fourni \u00e0 titre informatif. Consultez votre diab\u00e9tologue.',105,299,{align:'center'});}
       var pdfFileName = 'DiabeteFood_Rapport_'+today.toISOString().split('T')[0]+'.pdf';
-    if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-      var pdfBlob = doc.output('blob');
-      var pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
-      navigator.share({ title: 'Rapport DiabeteFood', files: [pdfFile] }).catch(function() { doc.save(pdfFileName); });
-    } else {
-      doc.save(pdfFileName);
-    }
+    var pdfBlob = doc.output('blob');
+    var pdfUrl = URL.createObjectURL(pdfBlob);
+
+    // Overlay de prévisualisation
+    var overlay = document.createElement('div');
+    overlay.id = 'pdf-preview-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;display:flex;flex-direction:column;align-items:center;padding:10px;box-sizing:border-box;';
+
+    // Barre du haut avec boutons
+    var topBar = document.createElement('div');
+    topBar.style.cssText = 'width:100%;max-width:600px;display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;flex-shrink:0;';
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '\u2715 Fermer';
+    closeBtn.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:#555;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;';
+    closeBtn.onclick = function() { URL.revokeObjectURL(pdfUrl); overlay.remove(); };
+
+    var shareBtn = document.createElement('button');
+    shareBtn.textContent = '\ud83d\udce4 Partager';
+    shareBtn.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:#ff6b00;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;';
+    shareBtn.onclick = function() {
+      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        var file = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
+        navigator.share({ title: 'Rapport DiabeteFood', files: [file] }).catch(function() { doc.save(pdfFileName); });
+      } else {
+        doc.save(pdfFileName);
+      }
+    };
+
+    var dlBtn = document.createElement('button');
+    dlBtn.textContent = '\u2b07 T\u00e9l\u00e9charger';
+    dlBtn.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;';
+    dlBtn.onclick = function() { doc.save(pdfFileName); };
+
+    topBar.appendChild(closeBtn);
+    topBar.appendChild(shareBtn);
+    topBar.appendChild(dlBtn);
+
+    // iframe pour afficher le PDF
+    var iframe = document.createElement('iframe');
+    iframe.src = pdfUrl;
+    iframe.style.cssText = 'flex:1;width:100%;max-width:600px;border:none;border-radius:10px;background:#fff;';
+
+    overlay.appendChild(topBar);
+    overlay.appendChild(iframe);
+    document.body.appendChild(overlay);
     }
 
 
