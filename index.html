@@ -166,7 +166,7 @@ if (welcome) welcome.style.display = 'none';
       premMessages.length = 0;
       var today = new Date().toDateString();
       localStorage.removeItem('prem_messages_' + today); localStorage.removeItem('prem_totals_' + today);
-      document.getElementById('prem-chat').innerHTML = '';
+      var chatEl = document.getElementById('prem-chat'); chatEl.querySelectorAll('.prem-msg').forEach(function(m){ m.remove(); }); var w = chatEl.querySelector('.prem-welcome'); if (w) w.style.display = '';
       renderPremChat();
     }
 
