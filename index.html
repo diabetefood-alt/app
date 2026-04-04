@@ -3231,12 +3231,30 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(renderAlertGo
 
 /* PWA Install Banner */
 var _deferredPrompt = null;
+var _installBannerShown = false;
 
-function createInstallBanner() {
+function createInstallBanner(mode) {
+  if (_installBannerShown) return;
   if (document.getElementById("install-banner")) return;
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+  if (navigator.standalone === true) return;
+  try {
+    if (localStorage.getItem("pwa_installed") === "1") return;
+    if (sessionStorage.getItem("install_dismissed") === "1") return;
+  } catch(e) {}
+  _installBannerShown = true;
   var div = document.createElement("div");
   div.id = "install-banner";
-  div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre ecran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
+  if (mode === "native") {
+    div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre ecran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
+  } else {
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Appuyez sur <b>Partager</b> puis <b>Sur l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
+    } else {
+      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Menu &#8942; puis <b>Ajouter a l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
+    }
+  }
   document.body.appendChild(div);
   setTimeout(function(){ div.classList.add("show"); }, 300);
 }
@@ -3260,25 +3278,23 @@ function dismissInstall() {
 
 function hideInstallBanner() {
   var b = document.getElementById("install-banner");
-  if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); }, 500); }
+  if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); _installBannerShown = false; }, 500); }
 }
 
 window.addEventListener("beforeinstallprompt", function(e) {
   e.preventDefault();
   _deferredPrompt = e;
-  try {
-    if (localStorage.getItem("pwa_installed") === "1") return;
-    if (sessionStorage.getItem("install_dismissed") === "1") return;
-  } catch(ex) {}
-  if (window.matchMedia("(display-mode: standalone)").matches) return;
-  if (navigator.standalone === true) return;
-  setTimeout(createInstallBanner, 3000);
+  createInstallBanner("native");
 });
 
 window.addEventListener("appinstalled", function() {
   hideInstallBanner();
   try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
 });
+
+/* Fallback: si beforeinstallprompt ne se declenche pas apres 5s, instructions manuelles */
+if (document.readyState === "complete") { setTimeout(function(){ if (!_deferredPrompt) createInstallBanner("manual"); }, 5000); }
+else { window.addEventListener("load", function(){ setTimeout(function(){ if (!_deferredPrompt) createInstallBanner("manual"); }, 5000); }); }
 
 </script>
 </body>
