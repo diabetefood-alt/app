@@ -2444,69 +2444,56 @@ function generatePDF() {
       <td>${h.nutriments?.sucres||'N/A'}</td>
       <td>${h.time||''}</td>
     </tr>`).join('');
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-  <title>Rapport DiabeteFood — ${date}</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a0a00;}
-    h1{color:#ff6b00;font-size:1.4rem;} h2{font-size:1rem;color:#5c3010;margin-top:20px;}
-    .header{border-bottom:3px solid #ff6b00;padding-bottom:12px;margin-bottom:20px;}
-    .stats{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;}
-    .stat-box{background:#f7f7f7;border:1px solid #ffe5cc;border-radius:8px;padding:12px 16px;text-align:center;}
-    .stat-num{font-size:1.5rem;font-weight:900;color:#ff6b00;}
-    .stat-lbl{font-size:0.75rem;color:#a07050;}
-    table{width:100%;border-collapse:collapse;font-size:0.85rem;}
-    th{background:#f5f5f5;padding:8px;text-align:left;border-bottom:2px solid #ffe5cc;}
-    td{padding:7px 8px;border-bottom:1px solid #ffe5cc;}
-    .disclaimer{background:#f7f7f7;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:20px;font-size:0.78rem;color:#92400e;}
-  
-.prem-land-feat { display:flex; align-items:flex-start; gap:14px; width:100%; max-width:340px; padding:16px; margin-bottom:12px; background:rgba(255,255,255,0.75); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1.5px solid rgba(255,107,0,0.1); border-radius:16px; box-shadow:0 2px 8px rgba(26,10,0,0.04),0 8px 24px rgba(255,107,0,0.06); }
-.prem-land-icon { font-size:32px; flex-shrink:0; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(255,107,0,0.08); border-radius:12px; }
-.prem-land-title { font-size:15px; font-weight:700; color:#1a0a00; margin-bottom:4px; }
-.prem-land-desc { font-size:13px; color:#666; line-height:1.4; }
-#prem-landing { animation:pageIn 0.3s ease; }
-#page-premium #prem-landing { display:flex; }
-#page-premium .prem-header, #page-premium .prem-calendar, #page-premium .prem-summary, #page-premium .prem-chat, #page-premium .prem-input-bar { display:none !important; }
-#page-premium.prem-unlocked #prem-landing { display:none !important; }
-#page-premium.prem-unlocked .prem-header, #page-premium.prem-unlocked .prem-calendar, #page-premium.prem-unlocked .prem-summary { display:flex !important; }
-#page-premium.prem-unlocked .prem-chat { display:flex !important; }
-#page-premium.prem-unlocked .prem-input-bar { display:flex !important; }
-
-
- 20px 0}
-</style></head><body>
-  <div class="header">
-    <h1> DiabeteFood — Rapport nutritionnel</h1>
-    <p>Patient : Diabète Type ${diabeteType} &nbsp;|&nbsp; Généré le : ${date}</p>
-  </div>
-  <div class="stats">
-    <div class="stat-box"><div class="stat-num">${scanHistory.length}</div><div class="stat-lbl">Produits analysés</div></div>
-    <div class="stat-box"><div class="stat-num">${avgScore}/100</div><div class="stat-lbl">Score moyen</div></div>
-    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='excellent').length}</div><div class="stat-lbl">✅ Excellents</div></div>
-    <div class="stat-box"><div class="stat-num">${scanHistory.filter(h=>h.verdict==='à éviter').length}</div><div class="stat-lbl">✖ À éviter</div></div>
-  </div>
-  <h2>Détail des produits scannés</h2>
-  <table><thead><tr><th>Produit</th><th>Score</th><th>Glucides</th><th>Sucres</th><th>Heure</th></tr></thead>
-  <tbody>${rows}</tbody></table>
-  <div class="disclaimer">⚕️ Ce rapport est généré par l'application DiabeteFood à titre informatif uniquement. Il ne remplace pas l'avis de votre médecin ou diabétologue. Veuillez consulter votre équipe médicale pour toute décision thérapeutique.</div>
-  </body></html>`;
-  // Créer un vrai PDF avec jsPDF
-    const container = document.createElement('div');
-    container.innerHTML = html;
-    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:210mm;';
-    document.body.appendChild(container);
+  // Générer un vrai PDF avec jsPDF + autoTable
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.html(container, {
-      callback: function(doc) {
-        document.body.removeChild(container);
-        doc.save('DiabeteFood_Rapport_' + date.replace(/\//g, '-') + '.pdf');
-      },
-      x: 5,
-      y: 5,
-      width: 200,
-      windowWidth: 800,
-      margin: [5, 5, 5, 5]
+    const pageWidth = pdf.internal.pageSize.getWidth();
+
+    // Titre
+    pdf.setFontSize(20);
+    pdf.setTextColor(255, 107, 0);
+    pdf.text('DiabeteFood', pageWidth / 2, 20, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Rapport Nutritionnel', pageWidth / 2, 28, { align: 'center' });
+
+    // Date et score moyen
+    pdf.setFontSize(11);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Date : ' + date, 15, 42);
+    pdf.text('Score moyen : ' + (avgScore || 'N/A') + ' / 10', 15, 50);
+
+    // Tableau des produits scannés
+    const tableRows = scanHistory.map(function(h) {
+      return [
+        h.nom || 'Inconnu',
+        (h.score != null ? h.score + '/10' : 'N/A'),
+        (h.nutriments && h.nutriments.glucides != null ? h.nutriments.glucides + 'g' : '-'),
+        (h.nutriments && h.nutriments.sucres != null ? h.nutriments.sucres + 'g' : '-'),
+        (h.nutriments && h.nutriments.sel != null ? h.nutriments.sel + 'g' : '-'),
+        h.heure || ''
+      ];
     });
+
+    pdf.autoTable({
+      startY: 58,
+      head: [['Produit', 'Score', 'Glucides', 'Sucres', 'Sel', 'Heure']],
+      body: tableRows.length > 0 ? tableRows : [['Aucun produit scann\u00e9', '', '', '', '', '']],
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [255, 107, 0], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [255, 245, 235] },
+      margin: { left: 15, right: 15 }
+    });
+
+    // Disclaimer
+    const finalY = pdf.lastAutoTable.finalY + 15;
+    pdf.setFontSize(8);
+    pdf.setTextColor(150, 150, 150);
+    pdf.text('Ce rapport est purement informatif. Veuillez consulter votre m\u00e9decin ou diab\u00e9tologue.', pageWidth / 2, finalY, { align: 'center' });
+    pdf.text('G\u00e9n\u00e9r\u00e9 par DiabeteFood - ' + date, pageWidth / 2, finalY + 5, { align: 'center' });
+
+    // Sauvegarder le PDF
+    pdf.save('DiabeteFood_Rapport_' + date.replace(/\//g, '-') + '.pdf');
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
