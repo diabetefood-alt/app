@@ -368,7 +368,7 @@
     var dlBtn = document.createElement('button');
     dlBtn.textContent = '\u2b07 T\u00e9l\u00e9charger';
     dlBtn.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;';
-    dlBtn.onclick = function() { doc.save(pdfFileName); };
+    dlBtn.onclick = function() { var a = document.createElement('a'); a.href = pdfUrl; a.download = pdfFileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
 
     topBar.appendChild(closeBtn);
     topBar.appendChild(shareBtn);
