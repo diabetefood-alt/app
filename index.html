@@ -1966,15 +1966,13 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 
 
 /* Install Banner */
-#install-banner { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; color: #333; padding: 0; z-index: 10000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -4px 24px rgba(0,0,0,0.12); border-radius: 20px 20px 0 0; }
+#install-banner { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
 #install-banner.show { transform: translateY(0); }
-#install-banner .install-content { padding: 18px 20px 20px; }
-#install-banner .install-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-#install-banner .install-header strong { font-size: 17px; color: #ff6b00; }
-#install-banner .install-close { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; padding: 0; line-height: 1; }
-#install-banner .install-steps { display: flex; flex-direction: column; gap: 10px; }
-#install-banner .install-step { font-size: 15px; color: #444; display: flex; align-items: center; gap: 6px; }
-#install-banner .install-step b { color: #ff6b00; }
+#install-banner .install-text { flex: 1; margin-right: 12px; }
+#install-banner .install-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
+#install-banner .install-text span { font-size: 12px; opacity: 0.9; }
+#install-banner .install-btn { background: #fff; color: #764ba2; border: none; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+#install-banner .install-close { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0 0 0 12px; opacity: 0.7; }
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3231,41 +3229,56 @@ function renderAlertGoals(){var goals=getAlertGoals();var container=document.get
 document.addEventListener('DOMContentLoaded',function(){setTimeout(renderAlertGoals,200)});
 
 
-/* PWA Install Banner - Manual Instructions */
-function showInstallBanner() {
+/* PWA Install Banner */
+var _deferredPrompt = null;
+
+function createInstallBanner() {
   if (document.getElementById("install-banner")) return;
-  if (window.matchMedia("(display-mode: standalone)").matches) return;
-  if (navigator.standalone === true) return;
-  try {
-    if (localStorage.getItem("pwa_installed") === "1") return;
-    if (sessionStorage.getItem("install_dismissed") === "1") return;
-  } catch(e) {}
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   var div = document.createElement("div");
   div.id = "install-banner";
-  if (isIOS) {
-    div.innerHTML = '<div class="install-content"><div class="install-header"><strong>Installer DiabeteFood</strong><button class="install-close" onclick="dismissInstall()">&times;</button></div><div class="install-steps"><span class="install-step">1. Appuyez sur <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> (Partager)</span><span class="install-step">2. Puis <b>Sur l\'ecran d\'accueil</b></span></div></div>';
-  } else {
-    div.innerHTML = '<div class="install-content"><div class="install-header"><strong>Installer DiabeteFood</strong><button class="install-close" onclick="dismissInstall()">&times;</button></div><div class="install-steps"><span class="install-step">1. Appuyez sur <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg> (menu en haut)</span><span class="install-step">2. Puis <b>Ajouter a l\'ecran d\'accueil</b></span></div></div>';
-  }
+  div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre ecran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
   document.body.appendChild(div);
-  setTimeout(function(){ div.classList.add("show"); }, 100);
+  setTimeout(function(){ div.classList.add("show"); }, 300);
+}
+
+function doInstall() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(result) {
+    if (result.outcome === "accepted") {
+      try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+    }
+    hideInstallBanner();
+    _deferredPrompt = null;
+  });
 }
 
 function dismissInstall() {
-  var b = document.getElementById("install-banner");
-  if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); }, 500); }
+  hideInstallBanner();
   try { sessionStorage.setItem("install_dismissed", "1"); } catch(e) {}
 }
 
-window.addEventListener("appinstalled", function() {
+function hideInstallBanner() {
   var b = document.getElementById("install-banner");
   if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); }, 500); }
-  try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+}
+
+window.addEventListener("beforeinstallprompt", function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  try {
+    if (localStorage.getItem("pwa_installed") === "1") return;
+    if (sessionStorage.getItem("install_dismissed") === "1") return;
+  } catch(ex) {}
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+  if (navigator.standalone === true) return;
+  setTimeout(createInstallBanner, 3000);
 });
 
-if (document.readyState === "complete") { setTimeout(showInstallBanner, 2000); }
-else { window.addEventListener("load", function(){ setTimeout(showInstallBanner, 2000); }); }
+window.addEventListener("appinstalled", function() {
+  hideInstallBanner();
+  try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+});
 
 </script>
 </body>
