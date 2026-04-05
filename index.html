@@ -417,7 +417,53 @@ if (welcome) welcome.style.display = 'none';
     // Init premium when tab is shown
     const origSwitchPage = typeof switchPage === 'function' ? switchPage : null;
 
-    </script>
+    
+function premHighlightMealByTime() {
+  var h = new Date().getHours();
+  var meal = 'collation';
+  if (h >= 5 && h < 11) meal = 'petit';
+  else if (h >= 11 && h < 15) meal = 'dejeuner';
+  else if (h >= 17 && h < 22) meal = 'diner';
+  var btns = document.querySelectorAll('.prem-suggestion[data-meal]');
+  btns.forEach(function(b) {
+    if (b.dataset.meal === meal) {
+      b.style.background = 'var(--accent)';
+      b.style.color = 'white';
+      b.style.borderColor = 'var(--accent)';
+      b.style.order = '-1';
+    } else {
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+      b.style.order = '';
+    }
+  });
+}
+
+function premUpdateStatColors() {
+  var goals = getAlertGoals();
+  var carbsEl = document.getElementById('prem-carbs');
+  var calsEl = document.getElementById('prem-cals');
+  var igEl = document.getElementById('prem-ig');
+  if (!carbsEl) return;
+  var carbs = premDayTotals.glucides || 0;
+  var cals = premDayTotals.calories || 0;
+  var igAvg = premDayTotals.ig_count > 0 ? premDayTotals.ig_sum / premDayTotals.ig_count : 0;
+  var maxCarbs = goals.maxCarbs || 0;
+  var maxCals = goals.maxCal || 0;
+  var maxIg = goals.maxGI || 0;
+  function colorize(el, val, max) {
+    if (!max || val === 0) { el.parentElement.style.borderLeft = ''; return; }
+    var pct = val / max;
+    if (pct < 0.7) el.parentElement.style.borderLeft = '3px solid #22c55e';
+    else if (pct < 1.0) el.parentElement.style.borderLeft = '3px solid #f59e0b';
+    else el.parentElement.style.borderLeft = '3px solid #ef4444';
+  }
+  colorize(carbsEl, carbs, maxCarbs);
+  colorize(calsEl, cals, maxCals);
+  colorize(igEl, igAvg, maxIg);
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -2352,51 +2398,6 @@ let diabeteType = 1;
 const FREEMIUM_ENABLED = false;
 const FREE_SCANS_PER_DAY = 5;
 
-function premHighlightMealByTime() {
-  var h = new Date().getHours();
-  var meal = 'collation';
-  if (h >= 5 && h < 11) meal = 'petit';
-  else if (h >= 11 && h < 15) meal = 'dejeuner';
-  else if (h >= 17 && h < 22) meal = 'diner';
-  var btns = document.querySelectorAll('.prem-suggestion[data-meal]');
-  btns.forEach(function(b) {
-    if (b.dataset.meal === meal) {
-      b.style.background = 'var(--accent)';
-      b.style.color = 'white';
-      b.style.borderColor = 'var(--accent)';
-      b.style.order = '-1';
-    } else {
-      b.style.background = '';
-      b.style.color = '';
-      b.style.borderColor = '';
-      b.style.order = '';
-    }
-  });
-}
-
-function premUpdateStatColors() {
-  var goals = getAlertGoals();
-  var carbsEl = document.getElementById('prem-carbs');
-  var calsEl = document.getElementById('prem-cals');
-  var igEl = document.getElementById('prem-ig');
-  if (!carbsEl) return;
-  var carbs = premDayTotals.glucides || 0;
-  var cals = premDayTotals.calories || 0;
-  var igAvg = premDayTotals.ig_count > 0 ? premDayTotals.ig_sum / premDayTotals.ig_count : 0;
-  var maxCarbs = goals.maxCarbs || 0;
-  var maxCals = goals.maxCal || 0;
-  var maxIg = goals.maxGI || 0;
-  function colorize(el, val, max) {
-    if (!max || val === 0) { el.parentElement.style.borderLeft = ''; return; }
-    var pct = val / max;
-    if (pct < 0.7) el.parentElement.style.borderLeft = '3px solid #22c55e';
-    else if (pct < 1.0) el.parentElement.style.borderLeft = '3px solid #f59e0b';
-    else el.parentElement.style.borderLeft = '3px solid #ef4444';
-  }
-  colorize(carbsEl, carbs, maxCarbs);
-  colorize(calsEl, cals, maxCals);
-  colorize(igEl, igAvg, maxIg);
-}
 
 function getTodayKey() { return 'scans_' + new Date().toISOString().slice(0,10); }
 function getScansToday() { return parseInt(localStorage.getItem(getTodayKey()) || '0'); }
