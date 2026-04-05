@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diabetefood-v68';
+const CACHE_NAME = 'diabetefood-v69';
 const ASSETS = [
  '/app/',
  '/app/index.html',
