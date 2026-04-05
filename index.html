@@ -3351,76 +3351,51 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(renderAlertGo
 
 /* PWA Install Banner */
 var _deferredPrompt = null;
-var _installBannerShown = false;
-
-function createInstallBanner(mode) {
-  if (window.matchMedia("(display-mode: standalone)").matches) return;
-  if (navigator.standalone === true) return;
-  try {
-    if (localStorage.getItem("pwa_installed") === "1") return;
-    if (sessionStorage.getItem("install_dismissed") === "1") return;
-  } catch(e) {}
-  var existing = document.getElementById("install-banner");
-  if (existing) existing.remove();
-  _installBannerShown = true;
-  var div = document.createElement("div");
-  div.id = "install-banner";
-  if (mode === "native" && _deferredPrompt) {
-    div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Ajoutez l\'appli sur votre ecran d\'accueil</span></div><button class="install-btn" onclick="doInstall()">Installer</button><button class="install-close" onclick="dismissInstall()">&times;</button>';
-  } else {
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Appuyez sur Partager puis <b>Sur l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
-    } else {
-      div.innerHTML = '<div class="install-text"><strong>Installer DiabeteFood</strong><span>Menu &#8942; en haut puis <b>Ajouter a l\'ecran d\'accueil</b></span></div><button class="install-close" onclick="dismissInstall()">&times;</button>';
-    }
-  }
-  document.body.appendChild(div);
-  setTimeout(function(){ div.classList.add("show"); }, 300);
-}
-
-function doInstall() {
-  if (!_deferredPrompt) return;
-  _deferredPrompt.prompt();
-  _deferredPrompt.userChoice.then(function(result) {
-    if (result.outcome === "accepted") {
-      try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
-    }
-    hideInstallBanner();
-    _deferredPrompt = null;
-  });
-}
-
-function dismissInstall() {
-  hideInstallBanner();
-  try { sessionStorage.setItem("install_dismissed", "1"); } catch(e) {}
-}
-
-function hideInstallBanner() {
-  var b = document.getElementById("install-banner");
-  if (b) { b.classList.remove("show"); setTimeout(function(){ b.remove(); _installBannerShown = false; }, 500); }
-}
-
 window.addEventListener("beforeinstallprompt", function(e) {
   e.preventDefault();
   _deferredPrompt = e;
-  /* Si le bandeau manuel est deja visible, on le remplace par le natif */
-  if (_installBannerShown) {
-    createInstallBanner("native");
-  } else {
-    createInstallBanner("native");
-  }
+  if (!localStorage.getItem("pwa_installed")) showInstallPopup();
 });
-
 window.addEventListener("appinstalled", function() {
-  hideInstallBanner();
-  try { localStorage.setItem("pwa_installed", "1"); } catch(e) {}
+  localStorage.setItem("pwa_installed", "1");
+  hideInstallPopup();
 });
 
-/* Fallback: si beforeinstallprompt ne se declenche pas apres 5s, instructions manuelles */
-if (document.readyState === "complete") { setTimeout(function(){ if (!_deferredPrompt && !_installBannerShown) createInstallBanner("manual"); }, 5000); }
-else { window.addEventListener("load", function(){ setTimeout(function(){ if (!_deferredPrompt && !_installBannerShown) createInstallBanner("manual"); }, 5000); }); }
+function showInstallPopup() {
+  if (document.getElementById("pwa-install-popup")) return;
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+  var overlay = document.createElement("div");
+  overlay.id = "pwa-install-popup";
+  overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  var box = document.createElement("div");
+  box.style.cssText = "background:white;border-radius:20px;padding:30px 24px;text-align:center;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+  box.innerHTML = '<div style="font-size:50px;margin-bottom:12px;">\ud83c\udf4a</div>' +
+    '<h3 style="margin:0 0 8px;font-size:20px;color:#333;">Installer DiabeteFood</h3>' +
+    '<p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.5;">Ajoutez l\'app sur votre \u00e9cran d\'accueil pour y acc\u00e9der en un clic, m\u00eame hors ligne !</p>' +
+    '<button id="pwa-install-yes" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent,#ff8c00);color:white;font-size:16px;font-weight:bold;cursor:pointer;margin-bottom:10px;">Installer maintenant</button>' +
+    '<button id="pwa-install-no" style="width:100%;padding:12px;border:none;border-radius:12px;background:none;color:#999;font-size:14px;cursor:pointer;">Plus tard</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById("pwa-install-yes").addEventListener("click", function() {
+    if (_deferredPrompt) {
+      _deferredPrompt.prompt();
+      _deferredPrompt.userChoice.then(function(choice) {
+        if (choice.outcome === "accepted") localStorage.setItem("pwa_installed", "1");
+        _deferredPrompt = null;
+        hideInstallPopup();
+      });
+    }
+  });
+  document.getElementById("pwa-install-no").addEventListener("click", function() {
+    hideInstallPopup();
+    localStorage.setItem("pwa_install_later", Date.now());
+  });
+}
 
+function hideInstallPopup() {
+  var popup = document.getElementById("pwa-install-popup");
+  if (popup) popup.remove();
+}
 </script>
 </body>
 </html>
