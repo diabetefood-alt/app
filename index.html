@@ -2637,7 +2637,8 @@ function switchPage(p) {
   document.getElementById('page-' + p).classList.add('active');
   const navBtn = document.getElementById('nav-' + p);
   if (navBtn) navBtn.classList.add('active');
-    if (p === 'premium') initPremiumCalendar();
+    if (p === 'premium' && !isPremium()) { document.getElementById('premium-overlay').classList.remove('hidden'); return; }
+  if (p === 'premium') initPremiumCalendar();
   if (p === 'history') renderHistory();
   if (p === 'premium') { updatePDFPreview(); document.getElementById('alert-toggle')?.classList.toggle('on', alertEnabled); var _ael=document.getElementById('alert-threshold'); if(_ael) _ael.value = alertThreshold; }
   if (p !== 'scan' && scannerActive) stopScanner();
