@@ -1,7 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'diabetefood-v80';
+const CACHE_NAME = 'diabetefood-v81';
 const ASSETS = [
   '/app/',
   '/app/index.html',
