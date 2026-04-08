@@ -2687,24 +2687,13 @@ var _scannerCallback = null;
                     var check = (10 - (sum % 10)) % 10;
                     if (check !== parseInt(code[11], 10)) return;
                 }
-                // Confirmation: 3 lectures identiques requises (comme Yuka)
-            if (code === window._confirmCode) {
-              window._confirmCount = (window._confirmCount || 0) + 1;
-            } else {
-              window._confirmCode = code;
-              window._confirmCount = 1;
-            }
-            if (window._confirmCount < 2) return;
-            window._confirmCount = 0;
-            window._confirmCode = null;
-            var now = Date.now();
-            if (code === lastCode && now - lastTime < 3000) return;
-            lastCode = code;
-            lastTime = now;
-            if (navigator.vibrate) navigator.vibrate(100);
-            stopScanner();
-            document.getElementById('barcode-input').value = code;
-            analyzeBarcode(code);
+                var now = Date.now();
+        if (code === lastCode && now - lastTime < 3000) return;
+        lastCode = code;
+        lastTime = now;
+        stopScanner();
+        document.getElementById('barcode-input').value = code;
+        analyzeBarcode(code);
             };
             Quagga.onDetected(_scannerCallback);
         }
