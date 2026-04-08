@@ -2639,7 +2639,7 @@ function switchPage(p) {
   if (navBtn) navBtn.classList.add('active');
     if (p === 'premium') initPremiumCalendar();
   if (p === 'history') renderHistory();
-  if (p === 'premium') { updatePDFPreview(); document.getElementById('alert-toggle')?.classList.toggle('on', alertEnabled); document.getElementById('alert-threshold').value = alertThreshold; }
+  if (p === 'premium') { updatePDFPreview(); document.getElementById('alert-toggle')?.classList.toggle('on', alertEnabled); var _ael=document.getElementById('alert-threshold'); if(_ael) _ael.value = alertThreshold; }
   if (p !== 'scan' && scannerActive) stopScanner();
 }
 
