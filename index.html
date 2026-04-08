@@ -3429,5 +3429,55 @@ function hideInstallPopup() {
   }
 })();
 </script>
+
+<!-- Firebase SDK for Push Notifications -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script>
+var firebaseConfig={apiKey:"AIzaSyB3KmZ_XCrMn58gX9yjEjxVyr5LROK2Is4",authDomain:"diabetefood-9d420.firebaseapp.com",projectId:"diabetefood-9d420",storageBucket:"diabetefood-9d420.firebasestorage.app",messagingSenderId:"794784288123",appId:"1:794784288123:web:b5387732717c5158ef41de"};
+firebase.initializeApp(firebaseConfig);
+var fcmMessaging=firebase.messaging();
+
+function requestNotifPermission(){
+if(!("Notification" in window))return;
+Notification.requestPermission().then(function(p){
+if(p==="granted"){
+navigator.serviceWorker.getRegistration().then(function(reg){
+fcmMessaging.getToken({vapidKey:"BPeauSyza5WNllGY3Ua5hOQEjzSeLaEYd9mau1igbLJRoRxac-QkxD7g5Fn8zdA3t7Z6HmAEjlbOHNOe-A_VfIA",serviceWorkerRegistration:reg}).then(function(token){
+console.log("FCM Token:",token);
+localStorage.setItem("fcm_token",token);
+}).catch(function(err){console.error("FCM error:",err);});
+});
+}
+});
+}
+
+function showNotifPopup(){
+if(Notification.permission==="granted"){requestNotifPermission();return;}
+if(Notification.permission==="denied"||localStorage.getItem("notif_dismissed"))return;
+if(!("Notification" in window))return;
+var o=document.createElement("div");
+o.id="notif-popup";
+o.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;";
+var b=document.createElement("div");
+b.style.cssText="background:white;border-radius:20px;padding:30px 24px;text-align:center;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+b.innerHTML='<div style="font-size:50px;margin-bottom:12px;">\uD83D\uDD14</div><h3 style="margin:0 0 8px;font-size:20px;color:#333;">Activer les notifications</h3><p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.5;">Re\u00e7ois des conseils perso de Rapha\u00ebl \uD83D\uDFE0 pour mieux g\u00e9rer ton diab\u00e8te !</p><button id="notif-yes" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent,#ff8c00);color:white;font-size:16px;font-weight:bold;cursor:pointer;margin-bottom:10px;">Activer</button><button id="notif-no" style="width:100%;padding:12px;border:none;border-radius:12px;background:none;color:#999;font-size:14px;cursor:pointer;">Plus tard</button>';
+o.appendChild(b);
+document.body.appendChild(o);
+document.getElementById("notif-yes").addEventListener("click",function(){o.remove();requestNotifPermission();});
+document.getElementById("notif-no").addEventListener("click",function(){o.remove();localStorage.setItem("notif_dismissed",Date.now());});
+}
+
+setTimeout(function(){
+if(Notification.permission!=="granted"&&!localStorage.getItem("notif_dismissed")){showNotifPopup();}
+else if(Notification.permission==="granted"){requestNotifPermission();}
+},5000);
+
+fcmMessaging.onMessage(function(payload){
+var t=payload.notification?payload.notification.title:"DiabeteFood";
+var bd=payload.notification?payload.notification.body:"";
+if(Notification.permission==="granted"){new Notification(t,{body:bd,icon:"/app/icon-192.png"});}
+});
+</script>
 </body>
 </html>
