@@ -3224,7 +3224,15 @@ renderScanCounter();
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+    reg.addEventListener('updatefound', function() {
+      var newWorker = reg.installing;
+      newWorker.addEventListener('statechange', function() {
+        if (newWorker.state === 'activated') { window.location.reload(); }
+      });
+    });
+    reg.update();
+  }).catch(function() {});
 }
 
     async function analyzeManual(barcode) {
@@ -3479,5 +3487,6 @@ var bd=payload.notification?payload.notification.body:"";
 if(Notification.permission==="granted"){new Notification(t,{body:bd,icon:"/app/icon-192.png"});}
 });
 </script>
+<div id="app-version" style="position:fixed;bottom:2px;right:5px;font-size:9px;color:#999;z-index:1;pointer-events:none;">v77</div>
 </body>
 </html>
