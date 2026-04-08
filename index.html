@@ -3443,7 +3443,7 @@ if(!("Notification" in window))return;
 Notification.requestPermission().then(function(p){
 if(p==="granted"){
 navigator.serviceWorker.getRegistration().then(function(reg){
-fcmMessaging.getToken({vapidKey:"BPeauSyza5WNllGY3Ua5hOQEjzSeLaEYd9mau1igbLJRoRxac-QkxD7g5Fn8zdA3t7Z6HmAEjlbOHNOe-A_VfIA",serviceWorkerRegistration:reg}).then(function(token){
+fcmMessaging.getToken({vapidKey:"BPeauSyza5WNllGY3Ua5h0QEjzSeLaEYd9mau1igbLJRoRxac-QkxD7g5Fn8zdA3t7Z6HmAEjIb0HN0e-A_VfIA",serviceWorkerRegistration:reg}).then(function(token){
 console.log("FCM Token:",token);
 localStorage.setItem("fcm_token",token);
 }).catch(function(err){console.error("FCM error:",err);});
