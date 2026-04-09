@@ -1,0 +1,134 @@
+name: Build TWA AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Bubblewrap
+        run: npm install -g @anthropic-ai/cli @bubblewrap/cli
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install Android build tools
+        run: |
+          sdkmanager "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Create Bubblewrap config
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo '{"jdkPath":"/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64","androidSdkPath":"'$ANDROID_HOME'"}' > ~/.bubblewrap/config.json
+
+      - name: Create TWA manifest
+        run: |
+          mkdir -p twa-build && cd twa-build
+          cat > twa-manifest.json << 'EOF'
+          {
+            "packageId": "com.diabetefood.scanner",
+            "host": "diabetefood-alt.github.io",
+            "name": "DiabeteFood Scanner",
+            "launcherName": "DiabeteFood",
+            "display": "standalone",
+            "themeColor": "#ff6b00",
+            "themeColorDark": "#cc5500",
+            "navigationColor": "#ff6b00",
+            "navigationColorDark": "#cc5500",
+            "navigationDividerColor": "#ff6b00",
+            "navigationDividerColorDark": "#cc5500",
+            "backgroundColor": "#fff8f2",
+            "enableNotifications": true,
+            "startUrl": "/app/",
+            "iconUrl": "https://diabetefood-alt.github.io/app/icon-512.png",
+            "maskableIconUrl": "https://diabetefood-alt.github.io/app/icon-512.png",
+            "shortcuts": [],
+            "signing": {
+              "keyPath": "./pwa-signing.keystore",
+              "alias": "pwa"
+            },
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "https://diabetefood-alt.github.io/app/manifest.json",
+            "fallbackType": "customtabs",
+            "features": {
+              "locationDelegation": {
+                "enabled": false
+              },
+              "playBilling": {
+                "enabled": true
+              }
+            },
+            "alphaDependencies": {
+              "enabled": false
+            },
+            "enableSiteSettingsShortcut": true,
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "fullScopeUrl": "https://diabetefood-alt.github.io/app/",
+            "minSdkVersion": 19,
+            "orientation": "default",
+            "fingerprints": []
+          }
+          EOF
+
+      - name: Init and Build TWA
+        run: |
+          cd twa-build
+          
+          # Find actual JDK path
+          JDK_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "JDK Path: $JDK_PATH"
+          
+          # Update bubblewrap config with correct paths
+          echo "{\"jdkPath\":\"$JDK_PATH\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
+          
+          # Generate keystore
+          keytool -genkeypair -alias pwa -keyalg RSA -keysize 2048 -validity 10000 \
+            -keystore ./pwa-signing.keystore \
+            -storepass diabetefood2024 -keypass diabetefood2024 \
+            -dname "CN=DiabeteFood, OU=Dev, O=DiabeteFood, L=Paris, ST=IDF, C=FR"
+          
+          # Init bubblewrap from manifest
+          echo "y" | bubblewrap init --manifest="https://diabetefood-alt.github.io/app/manifest.json" --directory=. || true
+          
+          # Copy our manifest over
+          cp twa-manifest.json ./twa-manifest.json
+          
+          # Build the AAB
+          bubblewrap build --signingKeyPath=./pwa-signing.keystore \
+            --signingKeyAlias=pwa \
+            --signingKeyPassword=diabetefood2024 \
+            --signingStorePassword=diabetefood2024 || true
+          
+          # List generated files
+          ls -la *.aab *.apk 2>/dev/null || echo "No AAB/APK found, listing all files:"
+          ls -la
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: diabetefood-aab
+          path: |
+            twa-build/*.aab
+            twa-build/*.apk
+          if-no-files-found: warn
