@@ -2455,22 +2455,66 @@ function canScan() {
 // ─── PREMIUM POPUP ────────────────────────────────────────────────────────────
 function showPremiumPopup() {
   document.getElementById('premium-overlay').style.display = 'flex';
+  loadGooglePlayPrices();
 }
 function closePremiumPopup() {
   document.getElementById('premium-overlay').classList.add('hidden');
 }
+let selectedPlan = 'yearly';
 function selectPrice(plan) {
+  selectedPlan = plan;
   document.getElementById('price-monthly').classList.toggle('selected', plan === 'monthly');
   document.getElementById('price-yearly').classList.toggle('selected', plan === 'yearly');
 }
-function activatePremium() {
-  // En production: ici tu intègres Google Play Billing
-  // Pour l'instant on simule l'activation
-  localStorage.setItem('diabetefood_premium', 'true');
-  closePremiumPopup();
-  renderScanCounter();
-  showError('✅ Premium activé ! Profitez de tous les avantages.');
+let digitalGoodsService = null;
+const PRODUCT_IDS = { monthly: 'diabetefood_premium_monthly', yearly: 'diabetefood_premium_yearly' };
+async function initDigitalGoods() {
+  if (!('getDigitalGoodsService' in window)) return null;
+  try { digitalGoodsService = await window.getDigitalGoodsService('https://play.google.com/billing'); return digitalGoodsService; }
+  catch(e) { return null; }
 }
+async function loadGooglePlayPrices() {
+  if (!digitalGoodsService) await initDigitalGoods();
+  if (!digitalGoodsService) return;
+  try {
+    var details = await digitalGoodsService.getDetails([PRODUCT_IDS.monthly, PRODUCT_IDS.yearly]);
+    details.forEach(function(item) {
+      if (item.itemId === PRODUCT_IDS.monthly) { var el = document.querySelector('#price-monthly .price-option-price'); if(el) el.textContent = item.price.value + item.price.currency; }
+      if (item.itemId === PRODUCT_IDS.yearly) { var el = document.querySelector('#price-yearly .price-option-price'); if(el) el.textContent = item.price.value + item.price.currency; }
+    });
+  } catch(e) {}
+}
+async function checkExistingPurchases() {
+  if (!digitalGoodsService) await initDigitalGoods();
+  if (!digitalGoodsService) return;
+  try {
+    var purchases = await digitalGoodsService.listPurchases();
+    for (var i=0; i<purchases.length; i++) {
+      if (Object.values(PRODUCT_IDS).includes(purchases[i].itemId)) {
+        localStorage.setItem('diabetefood_premium','true'); renderScanCounter(); return true;
+      }
+    }
+    localStorage.removeItem('diabetefood_premium'); renderScanCounter(); return false;
+  } catch(e) { return false; }
+}
+async function activatePremium() {
+  var productId = PRODUCT_IDS[selectedPlan];
+  if (!digitalGoodsService) await initDigitalGoods();
+  if (digitalGoodsService) {
+    try {
+      var details = await digitalGoodsService.getDetails([productId]);
+      if (!details||details.length===0){showError('Produit non disponible');return;}
+      var item=details[0];
+      var req=new PaymentRequest([{supportedMethods:'https://play.google.com/billing',data:{sku:item.itemId}}],{total:{label:item.title||'DiabeteFood Premium',amount:{currency:item.price.currency,value:item.price.value}}});
+      var resp=await req.show();
+      await digitalGoodsService.acknowledge(resp.details.purchaseToken,'repeating');
+      await resp.complete('success');
+      localStorage.setItem('diabetefood_premium','true'); closePremiumPopup(); renderScanCounter();
+      showError('✅ Premium activé ! Profitez de tous les avantages.');
+    } catch(e){ if(e.name!=='AbortError') showError('Erreur de paiement'); }
+  } else { showError('📱 Téléchargez l\'appli depuis le Play Store pour vous abonner !'); }
+}
+document.addEventListener('DOMContentLoaded',function(){checkExistingPurchases();});
 
 // ─── ALERTE GLUCIDES ──────────────────────────────────────────────────────────
 let alertEnabled = localStorage.getItem('alert_enabled') === 'true';
