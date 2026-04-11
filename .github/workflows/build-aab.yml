@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     steps:
       - name: Checkout repo
@@ -23,7 +24,7 @@ jobs:
           node-version: '22'
 
       - name: Install Bubblewrap
-        run: npm install -g @anthropic-ai/tokenizer 2>/dev/null; npm install -g @bubblewrap/cli
+        run: npm install -g @bubblewrap/cli
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -151,8 +152,8 @@ jobs:
           }
           MANIFESTEOF
           
-          # Build the AAB
-          bubblewrap build --signingKeyPath=./pwa-signing.keystore \
+          # Build the AAB - pipe yes to handle any interactive prompts
+          yes "" | bubblewrap build --signingKeyPath=./pwa-signing.keystore \
             --signingKeyAlias=pwa \
             --signingKeyPassword=diabetefood2024 \
             --signingStorePassword=diabetefood2024
