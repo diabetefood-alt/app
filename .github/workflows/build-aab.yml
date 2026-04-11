@@ -37,6 +37,9 @@ jobs:
           sdkmanager "build-tools;34.0.0" "platforms;android-34"
 
       - name: Create project and Build TWA
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: diabetefood2024
+          BUBBLEWRAP_KEY_PASSWORD: diabetefood2024
         run: |
           mkdir -p twa-build && cd twa-build
           
@@ -48,12 +51,12 @@ jobs:
           cat ~/.bubblewrap/config.json
           
           # Generate signing keystore
-          keytool -genkeypair -alias pwa -keyalg RSA -keysize 2048 -validity 10000 \
-            -keystore ./pwa-signing.keystore \
-            -storepass diabetefood2024 -keypass diabetefood2024 \
+          keytool -genkeypair -alias pwa -keyalg RSA -keysize 2048 -validity 10000 \\
+            -keystore ./pwa-signing.keystore \\
+            -storepass diabetefood2024 -keypass diabetefood2024 \\
             -dname "CN=DiabeteFood, OU=Dev, O=DiabeteFood, L=Paris, ST=IDF, C=FR"
           
-          # Create twa-manifest.json
+          # Create twa-manifest.json with playBilling enabled
           cat > twa-manifest.json << 'MANIFESTEOF'
           {
             "packageId": "com.diabetefood.scanner",
@@ -152,11 +155,10 @@ jobs:
           }
           MANIFESTEOF
           
-          # Build the AAB - pipe yes to handle any interactive prompts
-          yes "" | bubblewrap build --signingKeyPath=./pwa-signing.keystore \
-            --signingKeyAlias=pwa \
-            --signingKeyPassword=diabetefood2024 \
-            --signingStorePassword=diabetefood2024
+          # Build the AAB - env vars handle password prompts automatically
+          bubblewrap build --skipPwaValidation \\
+            --signingKeyPath=./pwa-signing.keystore \\
+            --signingKeyAlias=pwa
           
           echo "=== Build complete ==="
           ls -la *.aab *.apk 2>/dev/null || echo "No AAB/APK found"
