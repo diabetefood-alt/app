@@ -20,10 +20,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Bubblewrap
-        run: npm install -g @anthropic-ai/cli @bubblewrap/cli
+        run: npm install -g @bubblewrap/cli
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -38,12 +38,14 @@ jobs:
       - name: Create Bubblewrap config
         run: |
           mkdir -p ~/.bubblewrap
-          echo '{"jdkPath":"/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64","androidSdkPath":"'$ANDROID_HOME'"}' > ~/.bubblewrap/config.json
+          JDK_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "{\"jdkPath\":\"$JDK_PATH\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
 
       - name: Create TWA manifest
         run: |
           mkdir -p twa-build && cd twa-build
-          cat > twa-manifest.json << 'EOF'
+          cat > twa-manifest.json << 'MANIFEST_EOF'
           {
             "packageId": "com.diabetefood.scanner",
             "host": "diabetefood-alt.github.io",
@@ -88,39 +90,32 @@ jobs:
             "orientation": "default",
             "fingerprints": []
           }
-          EOF
+          MANIFEST_EOF
 
       - name: Init and Build TWA
         run: |
           cd twa-build
           
-          # Find actual JDK path
           JDK_PATH=$(dirname $(dirname $(readlink -f $(which java))))
           echo "JDK Path: $JDK_PATH"
           
-          # Update bubblewrap config with correct paths
           echo "{\"jdkPath\":\"$JDK_PATH\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
           cat ~/.bubblewrap/config.json
           
-          # Generate keystore
           keytool -genkeypair -alias pwa -keyalg RSA -keysize 2048 -validity 10000 \
             -keystore ./pwa-signing.keystore \
             -storepass diabetefood2024 -keypass diabetefood2024 \
             -dname "CN=DiabeteFood, OU=Dev, O=DiabeteFood, L=Paris, ST=IDF, C=FR"
           
-          # Init bubblewrap from manifest
           echo "y" | bubblewrap init --manifest="https://diabetefood-alt.github.io/app/manifest.json" --directory=. || true
           
-          # Copy our manifest over
           cp twa-manifest.json ./twa-manifest.json
           
-          # Build the AAB
           bubblewrap build --signingKeyPath=./pwa-signing.keystore \
             --signingKeyAlias=pwa \
             --signingKeyPassword=diabetefood2024 \
             --signingStorePassword=diabetefood2024 || true
           
-          # List generated files
           ls -la *.aab *.apk 2>/dev/null || echo "No AAB/APK found, listing all files:"
           ls -la
 
