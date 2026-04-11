@@ -79,10 +79,10 @@ jobs:
             }
           }
           dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
           }
-          AEOF
-          cat > app/src/main/res/values/strings.xml << 'XEOF'
+          AEOF          cat > app/src/main/res/values/strings.xml << 'XEOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
             <string name="appName">DiabeteFood Scanner</string>
@@ -98,6 +98,14 @@ jobs:
             <color name="colorPrimary">#ff6b00</color>
             <color name="navigationColor">#ff6b00</color>
             <color name="backgroundColor">#fff8f2</color>
+          </resources>
+          XEOF
+          cat > app/src/main/res/values/styles.xml << 'XEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <style name="Theme.LauncherActivity" parent="Theme.AppCompat.Light.NoActionBar">
+              <item name="android:windowBackground">@color/backgroundColor</item>
+            </style>
           </resources>
           XEOF
           cat > app/src/main/res/values/bools.xml << 'XEOF'
