@@ -82,7 +82,8 @@ jobs:
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
           }
-          AEOF          cat > app/src/main/res/values/strings.xml << 'XEOF'
+          AEOF
+          cat > app/src/main/res/values/strings.xml << 'XEOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
             <string name="appName">DiabeteFood Scanner</string>
