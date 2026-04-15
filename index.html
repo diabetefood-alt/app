@@ -145,6 +145,7 @@ if (welcome) welcome.style.display = 'none';
         // Update totals
         premDayTotals.calories += (t.calories||0);
         premDayTotals.glucides += (t.glucides||0);
+              premDayTotals.meals.push({heure: r.heure || new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), aliments: r.aliments || [], avis: r.avis || ''});
         premDayTotals.proteines += (t.proteines||0);
         premDayTotals.lipides += (t.lipides||0);
         if (t.ig_moyen) { premDayTotals.ig_sum += t.ig_moyen; premDayTotals.ig_count++; }
@@ -233,7 +234,7 @@ if (welcome) welcome.style.display = 'none';
             body:JSON.stringify({
               model:'claude-haiku-4-5-20251001',
               max_tokens:1024,
-              system:'Tu es Dr. DiabeteFood. Analyse cette photo de repas pour un diab\u00e9tique T' + diabType + '. Identifie chaque aliment, estime les portions et calcule les macros. R\u00e9ponds en JSON: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}',
+              system:'Tu es un expert nutritionniste-diab\u00e9tologue avec une vision parfaite. Analyse cette photo de repas pour un diab\u00e9tique T' + diabType + '. Identifie TOUS les aliments visibles. Si marque visible, identifie le produit exact. Estime les portions en grammes. Calcule les macros et l\'index glyc\u00e9mique r\u00e9el. Donne un conseil PRATIQUE. R\u00e9ponds UNIQUEMENT en JSON valide: {"aliments":[{"nom":"...","portion":"...","calories":0,"glucides":0,"proteines":0,"lipides":0,"ig":0}],"total":{"calories":0,"glucides":0,"proteines":0,"lipides":0,"ig_moyen":0},"avis":"<conseil>","heure":"' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '"}',
               messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64.split(',')[1]}},{type:'text',text:'Analyse cette photo de repas pour un diab\u00e9tique. IMPORTANT: Identifie pr\u00e9cis\u00e9ment chaque aliment visible. Si tu vois un emballage ou une marque, utilise le nom exact du produit (ex: Quaker, pas riz). Distingue bien les c\u00e9r\u00e9ales/flocons d\u2019avoine du riz. Pour chaque aliment, estime la portion, les calories, glucides et l\u2019indice glyc\u00e9mique. R\u00e9ponds en JSON.'}]}]
             })
           });
@@ -255,6 +256,7 @@ if (welcome) welcome.style.display = 'none';
             premMessages.push({role:'assistant', content:cardHtml, isHTML:true});
             premDayTotals.calories += (t.calories||0);
             premDayTotals.glucides += (t.glucides||0);
+              premDayTotals.meals.push({heure: r.heure || new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), aliments: r.aliments || [], avis: r.avis || ''});
             localStorage.setItem('prem_messages_' + new Date().toDateString(), JSON.stringify(premMessages));
             localStorage.setItem('prem_totals_' + new Date().toDateString(), JSON.stringify(premDayTotals));
           } else {
