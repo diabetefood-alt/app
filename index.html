@@ -2369,7 +2369,7 @@ button, a, input, select, textarea { transition: all 0.25s cubic-bezier(0.4,0,0.
 </nav>
 
 <!-- PREMIUM POPUP -->
-<div class="premium-overlay hidden" id="premium-overlay">
+<div class="premium-overlay hidden" id="premium-overlay" onclick="if(event.target===this)closePremiumPopup()">
   <div class="premium-sheet">
     <span class="premium-crown">★</span>
     <div class="premium-title">Passez à <span>Premium</span></div>
@@ -2414,7 +2414,7 @@ let diabeteType = 1;
 
 // ─── FREEMIUM CONFIG ─────────────────────────────────────────────────────────
 // ⚙ SWITCH: Mets FREEMIUM_ENABLED = false pour activer la limite quand tu es prêt
-const FREEMIUM_ENABLED = true;
+const FREEMIUM_ENABLED = false; // Scans illimites pour tous
 const FREE_SCANS_PER_DAY = 5;
 
 
@@ -2454,15 +2454,23 @@ function canScan() {
 
 // ─── PREMIUM POPUP ────────────────────────────────────────────────────────────
 function showPremiumPopup() {
-  document.getElementById('premium-overlay').style.display = 'flex';
+  const o = document.getElementById('premium-overlay');
+  if (!o) return;
+  o.style.display = '';
+  o.classList.remove('hidden');
   loadGooglePlayPrices();
 }
 function closePremiumPopup() {
-  document.getElementById('premium-overlay').classList.add('hidden');
-  // Retour au scan si aucune page active
-  const activePage = document.querySelector('.page.active');
-  if (!activePage) {
-    switchPage('scan');
+  const o = document.getElementById('premium-overlay');
+  if (!o) return;
+  o.classList.add('hidden');
+  o.style.display = 'none';
+  const ap = document.querySelector('.page.active');
+  if (!ap) {
+    const scanPage = document.getElementById('page-scan');
+    if (scanPage) scanPage.classList.add('active');
+    const navBtn = document.getElementById('nav-scan');
+    if (navBtn) navBtn.classList.add('active');
   }
 }
 let selectedPlan = 'yearly';
@@ -2512,7 +2520,7 @@ async function activatePremium() {
       var item=details[0];
       var req=new PaymentRequest([{supportedMethods:'https://play.google.com/billing',data:{sku:item.itemId}}],{total:{label:item.title||'DiabeteFood Premium',amount:{currency:item.price.currency,value:item.price.value}}});
       var resp=await req.show();
-      await digitalGoodsService.acknowledge(resp.details.purchaseToken,'repeating');
+      await digitalGoodsService.acknowledge(resp.details.purchaseToken,'repeatable');
       await resp.complete('success');
       localStorage.setItem('diabetefood_premium','true'); closePremiumPopup(); renderScanCounter();
       showError('✅ Premium activé ! Profitez de tous les avantages.');
