@@ -80,7 +80,8 @@ jobs:
           }
           dependencies {
             implementation 'androidx.appcompat:appcompat:1.6.1'
-            implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+            implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.0'
+              implementation 'com.google.androidbrowserhelper:billing:1.1.0'
           }
           AEOF
           cat > app/src/main/res/values/strings.xml << 'XEOF'
@@ -153,7 +154,7 @@ jobs:
                 android:authorities="@string/providerAuthority" android:grantUriPermissions="true" android:exported="false">
                 <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/filepaths"/>
               </provider>
-              <service android:name="com.google.androidbrowserhelper.trusted.DelegationService"
+              <service android:name="com.diabetefood.scanner.BillingDelegationService"
                 android:enabled="@bool/enableNotification" android:exported="@bool/enableNotification">
                 <intent-filter>
                   <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE"/>
@@ -163,6 +164,20 @@ jobs:
             </application>
           </manifest>
           MEOF
+          mkdir -p twa-app/app/src/main/java/com/diabetefood/scanner
+          cat > twa-app/app/src/main/java/com/diabetefood/scanner/BillingDelegationService.java << 'JEOF'
+          package com.diabetefood.scanner;
+          import com.google.androidbrowserhelper.playbilling.digitalgoods.DigitalGoodsRequestHandler;
+          import com.google.androidbrowserhelper.trusted.DelegationService;
+          public class BillingDelegationService extends DelegationService {
+              @Override
+              public void onCreate() {
+                  super.onCreate();
+                  registerExtraCommandHandler(new DigitalGoodsRequestHandler(getApplicationContext()));
+              }
+          }
+          JEOF
+
           echo "=== TWA project created ==="
           find . -type f | sort | head -30
 
