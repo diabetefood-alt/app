@@ -3529,9 +3529,11 @@ function hideInstallPopup() {
 <!-- Firebase SDK for Push Notifications -->
 <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore-compat.js"></script>
 <script>
 var firebaseConfig={apiKey:"AIzaSyB3KmZ_XCrMn58gX9yjEjxVyr5LROK2Is4",authDomain:"diabetefood-9d420.firebaseapp.com",projectId:"diabetefood-9d420",storageBucket:"diabetefood-9d420.firebasestorage.app",messagingSenderId:"794784288123",appId:"1:794784288123:web:b5387732717c5158ef41de"};
 firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
 var fcmMessaging=firebase.messaging();
 
 function requestNotifPermission(){
@@ -3542,6 +3544,7 @@ navigator.serviceWorker.getRegistration().then(function(reg){
 fcmMessaging.getToken({vapidKey:"BPeauSyza5WNllGY3Ua5h0QEjzSeLaEYd9mau1igbLJRoRxac-QkxD7g5Fn8zdA3t7Z6HmAEjIb0HN0e-A_VfIA",serviceWorkerRegistration:reg}).then(function(token){
 console.log("FCM Token:",token);
 localStorage.setItem("fcm_token",token);
+db.collection("fcm_tokens").doc(token).set({token:token,createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastSeen:firebase.firestore.FieldValue.serverTimestamp(),platform:navigator.userAgent.indexOf("Android")>-1?"android":"web",premium:localStorage.getItem("isPremium")==="true"},{merge:true}).catch(function(e){console.log("Token save error:",e);});
 }).catch(function(err){console.error("FCM error:",err);});
 });
 }
