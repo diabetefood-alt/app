@@ -2414,7 +2414,7 @@ let diabeteType = 1;
 
 // ─── FREEMIUM CONFIG ─────────────────────────────────────────────────────────
 // ⚙ SWITCH: Mets FREEMIUM_ENABLED = false pour activer la limite quand tu es prêt
-const FREEMIUM_ENABLED = false;
+const FREEMIUM_ENABLED = true;
 const FREE_SCANS_PER_DAY = 5;
 
 
@@ -2521,6 +2521,7 @@ let alertEnabled = localStorage.getItem('alert_enabled') === 'true';
 let alertThreshold = parseInt(localStorage.getItem('alert_threshold') || '30');
 
 function toggleAlert() {
+  if (!isPremium()) { showPremiumPopup(); return; }
   alertEnabled = !alertEnabled;
   localStorage.setItem('alert_enabled', alertEnabled);
   document.getElementById('alert-toggle').classList.toggle('on', alertEnabled);
@@ -2546,6 +2547,7 @@ let compareSlots = { 1: null, 2: null };
 let comparePending = null;
 
 function addToCompare(slot) {
+  if (!isPremium()) { showPremiumPopup(); return; }
   comparePending = slot;
   switchPage('scan');
   showError('Scannez le produit ' + (slot === 1 ? 'A' : 'B') + ' pour le comparer');
@@ -2611,6 +2613,7 @@ function updatePDFPreview() {
 }
 
 function generatePDF() {
+  if (!isPremium()) { showPremiumPopup(); return; }
   if (scanHistory.length === 0) { showError("Scannez d'abord quelques produits !"); return; }
   const date = new Date().toLocaleDateString('fr-FR');
   const avgScore = Math.round(scanHistory.reduce((a,b) => a + b.score, 0) / scanHistory.length);
@@ -2676,6 +2679,11 @@ function generatePDF() {
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function switchPage(p) {
+  // PAYWALL: bloquer l'accès à la page Premium si pas abonné
+  if (p === 'premium' && !isPremium()) {
+    showPremiumPopup();
+    return;
+  }
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
@@ -3043,7 +3051,9 @@ Réponds UNIQUEMENT en JSON valide:
       updateCompareWinner();
       comparePending = null;
       showError('✅ Produit ajouté au comparateur !');
-      setTimeout(() => switchPage('premium'), 1200);
+      if (isPremium()) {
+        setTimeout(() => switchPage('premium'), 1200);
+      }
     }
 
     document.getElementById('result-card').innerHTML = originalResultCardHTML;
