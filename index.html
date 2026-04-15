@@ -2459,6 +2459,11 @@ function showPremiumPopup() {
 }
 function closePremiumPopup() {
   document.getElementById('premium-overlay').classList.add('hidden');
+  // Retour au scan si aucune page active
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) {
+    switchPage('scan');
+  }
 }
 let selectedPlan = 'yearly';
 function selectPrice(plan) {
@@ -2512,7 +2517,14 @@ async function activatePremium() {
       localStorage.setItem('diabetefood_premium','true'); closePremiumPopup(); renderScanCounter();
       showError('✅ Premium activé ! Profitez de tous les avantages.');
     } catch(e){ if(e.name!=='AbortError') showError('Erreur de paiement'); }
-  } else { showError('📱 Téléchargez l\'appli depuis le Play Store pour vous abonner !'); }
+  } else {
+    // Pas dans un TWA — rediriger vers le Play Store
+    closePremiumPopup();
+    showError('📱 Redirection vers le Google Play Store...');
+    setTimeout(() => {
+      window.open('https://play.google.com/store/apps/details?id=com.diabetefood.scanner', '_blank');
+    }, 500);
+  }
 }
 document.addEventListener('DOMContentLoaded',function(){checkExistingPurchases();});
 
