@@ -96,7 +96,6 @@
     } else {
       if (premiumPage) premiumPage.classList.remove('prem-unlocked');
       if (scanCounter) scanCounter.classList.remove('premium-mode');
-      if (overlay) overlay.classList.remove('hidden');
     }
   }
 
