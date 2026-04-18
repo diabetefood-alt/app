@@ -1,7 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'diabetefood-v84';
+const CACHE_NAME = 'diabetefood-v85';
 const ASSETS = [
   '/app/',
   '/app/index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   '/app/billing.js',
   '/app/premium-gate.js',
   '/app/premium.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js'
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
 // Scripts premium a injecter dans le HTML
